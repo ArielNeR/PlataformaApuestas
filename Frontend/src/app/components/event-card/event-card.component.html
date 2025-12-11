@@ -1,0 +1,93 @@
+<!-- Frontend/src/app/components/event-card/event-card.component.html -->
+<div class="glass rounded-2xl overflow-hidden card-hover cursor-pointer"
+     [class.w-72]="size === 'small'"
+     [class.flex-shrink-0]="size === 'small'">
+  
+  <!-- Header con imagen/gradiente -->
+  <div class="relative p-4"
+       [class.h-32]="size === 'small'"
+       [class.h-40]="size !== 'small'"
+       [ngClass]="event.status === 'live' ? 'bg-gradient-to-br from-red-600/30 to-orange-600/30' : 'bg-gradient-to-br from-indigo-600/30 to-purple-600/30'">
+    
+    <!-- Badge -->
+    <div class="absolute top-3 left-3">
+      <ng-container *ngIf="event.status === 'live'">
+        <div class="flex items-center gap-2 bg-red-600/80 px-2 py-1 rounded-full text-xs">
+          <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+          {{ event.minute }}'
+        </div>
+      </ng-container>
+      <ng-container *ngIf="event.status === 'scheduled'">
+        <div class="bg-indigo-600/80 px-2 py-1 rounded-full text-xs">
+          {{ formatTime(event.startTime) }}
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- League -->
+    <div class="absolute top-3 right-3 text-xs text-gray-300">{{ event.league }}</div>
+
+    <!-- Teams -->
+    <div class="flex items-center justify-between" [class.mt-8]="size === 'small'" [class.mt-10]="size !== 'small'">
+      <div class="text-center flex-1">
+        <img [src]="getFlagUrl(event.flag1)" 
+             class="object-cover rounded mx-auto mb-1"
+             [class.w-10]="size === 'small'" [class.h-7]="size === 'small'"
+             [class.w-12]="size !== 'small'" [class.h-8]="size !== 'small'"
+             [alt]="event.team1">
+        <p class="font-medium truncate" [class.text-sm]="size === 'small'">{{ event.team1 }}</p>
+      </div>
+      
+      <div class="text-center px-4">
+        <ng-container *ngIf="event.status === 'live'">
+          <p class="font-bold" [class.text-2xl]="size === 'small'" [class.text-3xl]="size !== 'small'">
+            {{ event.score1 }} - {{ event.score2 }}
+          </p>
+        </ng-container>
+        <ng-container *ngIf="event.status === 'scheduled'">
+          <p class="font-bold" [class.text-xl]="size === 'small'" [class.text-2xl]="size !== 'small'">VS</p>
+        </ng-container>
+      </div>
+      
+      <div class="text-center flex-1">
+        <img [src]="getFlagUrl(event.flag2)" 
+             class="object-cover rounded mx-auto mb-1"
+             [class.w-10]="size === 'small'" [class.h-7]="size === 'small'"
+             [class.w-12]="size !== 'small'" [class.h-8]="size !== 'small'"
+             [alt]="event.team2">
+        <p class="font-medium truncate" [class.text-sm]="size === 'small'">{{ event.team2 }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Odds -->
+  <div class="p-3 flex gap-2">
+    <button class="odds-btn flex-1 bg-gray-800 py-2 rounded-lg text-center"
+            [class.selected]="isSelected('home')"
+            (click)="addToSlip('home', event.odds.home, $event)">
+      <span class="text-xs text-gray-400 block">1</span>
+      <span class="font-bold" [class.text-green-400]="event.status === 'live'">
+        {{ event.odds.home.toFixed(2) }}
+      </span>
+    </button>
+    
+    <button *ngIf="event.odds.draw !== undefined"
+            class="odds-btn flex-1 bg-gray-800 py-2 rounded-lg text-center"
+            [class.selected]="isSelected('draw')"
+            (click)="addToSlip('draw', event.odds.draw!, $event)">
+      <span class="text-xs text-gray-400 block">X</span>
+      <span class="font-bold" [class.text-green-400]="event.status === 'live'">
+        {{ event.odds.draw!.toFixed(2) }}
+      </span>
+    </button>
+    
+    <button class="odds-btn flex-1 bg-gray-800 py-2 rounded-lg text-center"
+            [class.selected]="isSelected('away')"
+            (click)="addToSlip('away', event.odds.away, $event)">
+      <span class="text-xs text-gray-400 block">2</span>
+      <span class="font-bold" [class.text-green-400]="event.status === 'live'">
+        {{ event.odds.away.toFixed(2) }}
+      </span>
+    </button>
+  </div>
+</div>

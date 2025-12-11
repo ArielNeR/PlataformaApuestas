@@ -1,23 +1,85 @@
-<div class="max-w-7xl mx-auto px-6 py-10">
-  <h1 class="text-6xl font-black mb-10 bg-gradient-to-r from-bet-green to-cyan-400 bg-clip-text text-transparent">
-    🔥 EN VIVO AHORA
-  </h1>
-
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-    <div class="relative group cursor-pointer rounded-3xl overflow-hidden bg-gradient-to-br from-bet-card to-bet-bg border border-bet-border transform transition-all hover:scale-105 hover:border-bet-green">
-      <img src="https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=800&q=80" class="w-full h-96 object-cover group-hover:scale-110 transition">
-      <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-      <div class="absolute bottom-0 p-8 text-white">
-        <h3 class="text-3xl font-black">Real Madrid vs Barcelona</h3>
-        <p class="text-bet-green text-xl mt-2">LaLiga • En vivo</p>
-        <div class="grid grid-cols-3 gap-3 mt-6">
-          <button class="bg-white/20 backdrop-blur py-4 rounded-xl font-bold">2.10</button>
-          <button class="bg-white/10 backdrop-blur py-4 rounded-xl font-bold">3.80</button>
-          <button class="bg-white/20 backdrop-blur py-4 rounded-xl font-bold text-bet-red">3.20</button>
-        </div>
+<!-- Frontend/src/app/pages/home/home.component.html -->
+<!-- Hero Banner -->
+<div class="relative h-80 md:h-96 overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-r from-indigo-900/90 via-purple-900/80 to-transparent z-10"></div>
+  <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1600" 
+       class="absolute inset-0 w-full h-full object-cover" alt="Hero">
+  <div class="relative z-20 max-w-7xl mx-auto px-4 h-full flex items-center">
+    <div class="max-w-xl">
+      <div class="inline-flex items-center gap-2 bg-red-600/80 px-3 py-1 rounded-full text-sm mb-4">
+        <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+        EN VIVO AHORA
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">Champions League</h1>
+      <p class="text-xl text-gray-300 mb-6">Real Madrid vs Barcelona • Cuartos de Final</p>
+      <div class="flex gap-4">
+        <a routerLink="/live" 
+           class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 rounded-xl font-bold hover:opacity-90 transition flex items-center gap-2">
+          <i class="fas fa-play"></i> Apostar Ahora
+        </a>
+        <button class="bg-white/10 backdrop-blur px-6 py-3 rounded-xl font-bold hover:bg-white/20 transition flex items-center gap-2">
+          <i class="fas fa-info-circle"></i> Ver Detalles
+        </button>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Repetí 5 veces más o hacé un *ngFor después -->
+<!-- Sports Filter -->
+<div class="max-w-7xl mx-auto px-4 py-6">
+  <app-sport-filter (sportChange)="onSportChange($event)"></app-sport-filter>
+</div>
+
+<!-- Live Events Carousel -->
+<div class="max-w-7xl mx-auto px-4 mb-8" *ngIf="liveEvents.length > 0">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-2xl font-bold flex items-center gap-3">
+      <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+      En Vivo
+    </h2>
+    <a routerLink="/live" class="text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+      Ver todos <i class="fas fa-chevron-right"></i>
+    </a>
+  </div>
+  <div class="carousel flex gap-4 overflow-x-auto pb-4">
+    <app-event-card *ngFor="let event of liveEvents" 
+                    [event]="event" 
+                    size="small">
+    </app-event-card>
+  </div>
+</div>
+
+<!-- Upcoming Events Carousel -->
+<div class="max-w-7xl mx-auto px-4 mb-8" *ngIf="upcomingEvents.length > 0">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-2xl font-bold flex items-center gap-3">
+      <i class="fas fa-clock text-indigo-400"></i>
+      Próximos Eventos
+    </h2>
+    <a routerLink="/live" class="text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+      Ver todos <i class="fas fa-chevron-right"></i>
+    </a>
+  </div>
+  <div class="carousel flex gap-4 overflow-x-auto pb-4">
+    <app-event-card *ngFor="let event of upcomingEvents" 
+                    [event]="event" 
+                    size="small">
+    </app-event-card>
+  </div>
+</div>
+
+<!-- Popular Events Grid -->
+<div class="max-w-7xl mx-auto px-4 mb-8" *ngIf="popularEvents.length > 0">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-2xl font-bold flex items-center gap-3">
+      <i class="fas fa-star text-yellow-400"></i>
+      Populares
+    </h2>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <app-event-card *ngFor="let event of popularEvents" 
+                    [event]="event" 
+                    size="medium">
+    </app-event-card>
   </div>
 </div>

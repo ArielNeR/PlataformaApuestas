@@ -1,23 +1,53 @@
+// Frontend/src/app/app.component.ts
 import { Component, inject } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';  // ← AÑADÍ ESTO
+import { CommonModule } from '@angular/common';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from './services/auth.service';
-import { AsyncPipe, CommonModule } from '@angular/common';
+import { BetService } from './services/bet.service';
 import { BetSlipComponent } from './components/bet-slip/bet-slip.component';
+import { ResultOverlayComponent } from './components/result-overlay/result-overlay.component';
+
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
-    RouterOutlet,
-    RouterLink,           // ← NUEVO
-    RouterLinkActive,     // ← NUEVO
-    AsyncPipe,
     CommonModule,
-    BetSlipComponent
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    BetSlipComponent,
+    ResultOverlayComponent
   ],
   templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  private auth = inject(AuthService);
-  user$ = this.auth.user$;
+  private authService = inject(AuthService);
+  private betService = inject(BetService);
+  private router = inject(Router);
+
+  user$ = this.authService.user$;
+  betSlip$ = this.betService.betSlip$;
+
+  demoMode = true;
+  showUserMenu = false;
+
+  toggleDemoMode(): void {
+    this.demoMode = !this.demoMode;
+  }
+
+  toggleUserMenu(): void {
+    this.showUserMenu = !this.showUserMenu;
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.showUserMenu = false;
+    this.router.navigate(['/login']);
+  }
+
+  get slipCount(): number {
+    return this.betService.slipCount;
+  }
 }

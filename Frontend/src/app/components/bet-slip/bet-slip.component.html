@@ -1,1 +1,116 @@
-<p>bet-slip works!</p>
+<!-- Frontend/src/app/components/bet-slip/bet-slip.component.html -->
+<!-- Panel Flotante -->
+<div class="fixed right-0 top-16 bottom-0 w-80 glass z-40 flex flex-col transition-transform duration-300"
+     [class.translate-x-full]="!isOpen"
+     [class.translate-x-0]="isOpen">
+  
+  <!-- Header -->
+  <div class="p-4 border-b border-gray-700 flex items-center justify-between">
+    <h3 class="font-bold flex items-center gap-2">
+      <i class="fas fa-receipt"></i>
+      Cupón de Apuesta
+    </h3>
+    <button (click)="toggle()" class="text-gray-400 hover:text-white transition">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Selections -->
+  <div class="flex-1 overflow-y-auto p-4 space-y-3">
+    <ng-container *ngIf="(betSlip$ | async) as selections">
+      
+      <!-- Empty State -->
+      <div *ngIf="selections.length === 0" class="text-center text-gray-400 py-8">
+        <i class="fas fa-ticket text-4xl mb-3 opacity-50"></i>
+        <p>No hay selecciones</p>
+        <p class="text-sm mt-1">Haz clic en las cuotas para añadir apuestas</p>
+      </div>
+
+      <!-- Selection Items -->
+      <div *ngFor="let selection of selections" 
+           class="bg-gray-800/50 rounded-xl p-3 animate-slide-in">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex-1">
+            <p class="text-sm text-gray-400">{{ selection.event.league }}</p>
+            <p class="font-medium">{{ selection.event.team1 }} vs {{ selection.event.team2 }}</p>
+          </div>
+          <button (click)="removeItem(selection.eventId)" 
+                  class="text-gray-400 hover:text-red-400 transition">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-indigo-400">{{ selection.pickLabel }}</span>
+          <span class="font-bold text-green-400">{{ selection.odds.toFixed(2) }}</span>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Footer -->
+  <div class="p-4 border-t border-gray-700 space-y-4" *ngIf="slipCount > 0">
+    
+    <!-- Count -->
+    <div class="flex items-center justify-between text-sm">
+      <span class="text-gray-400">Selecciones:</span>
+      <span>{{ slipCount }}</span>
+    </div>
+
+    <!-- Quick Stakes -->
+    <div class="flex gap-2">
+      <button *ngFor="let amount of [10, 25, 50, 100]"
+              (click)="setStake(amount)"
+              class="flex-1 py-2 rounded-lg text-sm font-medium transition"
+              [class.bg-indigo-600]="stake === amount"
+              [class.bg-gray-700]="stake !== amount">
+        ${{ amount }}
+      </button>
+    </div>
+
+    <!-- Stake Input -->
+    <div class="relative">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+      <input type="number" 
+             [(ngModel)]="stake" 
+             min="1"
+             class="w-full bg-gray-800 rounded-lg pl-8 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none">
+    </div>
+
+    <!-- Totals -->
+    <div class="flex items-center justify-between">
+      <span class="text-gray-400">Cuota total:</span>
+      <span class="font-bold text-lg">{{ totalOdds.toFixed(2) }}</span>
+    </div>
+    <div class="flex items-center justify-between">
+      <span class="text-gray-400">Ganancia potencial:</span>
+      <span class="font-bold text-lg text-green-400">${{ potentialWin.toFixed(2) }}</span>
+    </div>
+
+    <!-- Place Bet Button -->
+    <button (click)="placeBet()"
+            [disabled]="isPlacing || stake < 1"
+            class="w-full bg-gradient-to-r from-green-600 to-emerald-600 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed">
+      <ng-container *ngIf="!isPlacing">
+        <i class="fas fa-check-circle mr-2"></i> Confirmar Apuesta
+      </ng-container>
+      <ng-container *ngIf="isPlacing">
+        <i class="fas fa-spinner fa-spin mr-2"></i> Procesando...
+      </ng-container>
+    </button>
+
+    <!-- Clear -->
+    <button (click)="clearAll()" class="w-full text-gray-500 hover:text-red-400 text-sm transition">
+      Limpiar cupón
+    </button>
+  </div>
+</div>
+
+<!-- Floating Cart Button -->
+<button (click)="toggle()" 
+        class="fixed bottom-24 md:bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-lg flex items-center justify-center z-30 hover:scale-110 transition">
+  <i class="fas fa-receipt text-xl"></i>
+  <span *ngIf="slipCount > 0"
+        class="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full text-xs flex items-center justify-center font-bold">
+    {{ slipCount }}
+  </span>
+</button>
