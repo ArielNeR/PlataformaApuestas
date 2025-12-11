@@ -1,1 +1,36 @@
-<p>login works!</p>
+<div class="min-h-screen flex items-center justify-center bg-gradient-main px-6">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-10">
+      <h1 class="text-7xl font-black bg-gradient-to-r from-bet-green to-cyan-400 bg-clip-text text-transparent">
+        BETFLOW
+      </h1>
+      <p class="text-xl mt-4 text-gray-300">La plataforma más zarpada de apuestas</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="login()" class="space-y-6">
+      <input 
+        formControlName="email" 
+        type="email" 
+        placeholder="Email (usa @demo.com para modo demo)" 
+        class="w-full px-6 py-5 rounded-2xl bg-bet-card border border-bet-border focus:border-bet-green focus:outline-none text-lg transition">
+
+      <input 
+        formControlName="password" 
+        type="password" 
+        placeholder="Contraseña" 
+        class="w-full px-6 py-5 rounded-2xl bg-bet-card border border-bet-border focus:border-bet-green focus:outline-none text-lg transition">
+
+      <button 
+        type="submit" 
+        [disabled]="form.invalid"
+        class="w-full py-5 rounded-2xl font-black text-xl text-black bg-gradient-to-r from-bet-green to-cyan-400 hover:from-cyan-400 hover:to-bet-green transition transform hover:scale-105 disabled:opacity-50">
+        ENTRAR AHORA
+      </button>
+    </form>
+
+    <p class="text-center mt-8 text-gray-400">
+      ¿No tenés cuenta? 
+      <a routerLink="/register" class="text-bet-green font-bold hover:underline">Registrate gratis →</a>
+    </p>
+  </div>
+</div>
