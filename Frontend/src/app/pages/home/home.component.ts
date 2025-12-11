@@ -1,3 +1,4 @@
+// Frontend/src/app/pages/home/home.component.ts
 import { Component } from '@angular/core';
 
 @Component({
@@ -5,8 +6,6 @@ import { Component } from '@angular/core';
   standalone: true,
   imports: [],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.scss'
+  styleUrls: ['./home.component.scss']  // ← CORREGIDO
 })
-export class HomeComponent {
-
-}
+export class HomeComponent {}

@@ -1,3 +1,4 @@
+// Frontend/src/app/components/bet-slip/bet-slip.component.ts
 import { Component } from '@angular/core';
 
 @Component({
@@ -5,8 +6,6 @@ import { Component } from '@angular/core';
   standalone: true,
   imports: [],
   templateUrl: './bet-slip.component.html',
-  styleUrl: './bet-slip.component.scss'
+  styleUrls: ['./bet-slip.component.scss']  // ← CORREGIDO
 })
-export class BetSlipComponent {
-
-}
+export class BetSlipComponent {}
