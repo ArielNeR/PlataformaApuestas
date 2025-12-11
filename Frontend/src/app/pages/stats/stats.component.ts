@@ -11,7 +11,7 @@ Chart.register(...registerables);
   standalone: true,
   imports: [CommonModule],
   templateUrl: './stats.component.html',
-  styleUrls: ['./stats.component.scss']
+  styles: []
 })
 export class StatsComponent implements OnInit, AfterViewInit {
   @ViewChild('balanceChart') balanceChartRef!: ElementRef<HTMLCanvasElement>;

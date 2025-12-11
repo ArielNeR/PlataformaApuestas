@@ -20,7 +20,7 @@ interface GameMode {
   standalone: true,
   imports: [CommonModule, SimulationModalComponent],
   templateUrl: './modes.component.html',
-  styleUrls: ['./modes.component.scss']
+  styles: []
 })
 export class ModesComponent {
   showSimulation = false;

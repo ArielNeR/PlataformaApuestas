@@ -7,7 +7,6 @@ import { BetService } from './services/bet.service';
 import { BetSlipComponent } from './components/bet-slip/bet-slip.component';
 import { ResultOverlayComponent } from './components/result-overlay/result-overlay.component';
 
-
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -20,7 +19,7 @@ import { ResultOverlayComponent } from './components/result-overlay/result-overl
     ResultOverlayComponent
   ],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styles: []
 })
 export class AppComponent {
   private authService = inject(AuthService);

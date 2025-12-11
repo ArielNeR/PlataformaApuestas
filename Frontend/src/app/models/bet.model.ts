@@ -1,4 +1,6 @@
 // Frontend/src/app/models/bet.model.ts
+import { SportEvent } from './event.model';
+
 export interface BetSelection {
   eventId: string;
   event: SportEvent;

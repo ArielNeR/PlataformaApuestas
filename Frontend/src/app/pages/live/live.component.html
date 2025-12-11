@@ -1,0 +1,40 @@
+<!-- Frontend/src/app/pages/live/live.component.html -->
+<div class="max-w-7xl mx-auto px-4 py-8">
+  
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold flex items-center gap-3">
+      <span class="relative flex h-4 w-4">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
+      </span>
+      Eventos en Vivo
+    </h1>
+    <p class="text-gray-400 mt-2">{{ filteredEvents.length }} eventos en curso</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="mb-6">
+    <app-sport-filter (sportChange)="onSportChange($event)"></app-sport-filter>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="flex justify-center py-20">
+    <div class="animate-spin w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && filteredEvents.length === 0" class="text-center py-20">
+    <i class="fas fa-broadcast-tower text-6xl text-gray-600 mb-4"></i>
+    <h3 class="text-2xl font-bold text-gray-400">No hay eventos en vivo</h3>
+    <p class="text-gray-500 mt-2">Vuelve más tarde para ver eventos en directo</p>
+  </div>
+
+  <!-- Events Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" *ngIf="!isLoading && filteredEvents.length > 0">
+    <app-event-card *ngFor="let event of filteredEvents" 
+                    [event]="event" 
+                    size="medium">
+    </app-event-card>
+  </div>
+</div>
