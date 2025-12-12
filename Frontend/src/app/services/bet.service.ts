@@ -1,27 +1,62 @@
 // Frontend/src/app/services/bet.service.ts
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, delay } from 'rxjs';
-import { BetSelection, Bet, BetHistoryItem } from '../models/bet.model';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { BehaviorSubject, Observable, tap, of, catchError } from 'rxjs';
+import { BetSelection } from '../models/bet.model';
 import { SportEvent } from '../models/event.model';
+import { AuthService } from './auth.service';
+import { ResultOverlayService } from './result-overlay.service';
 
 @Injectable({ providedIn: 'root' })
 export class BetService {
+  private readonly API_URL = 'http://localhost:3000';
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private resultService = inject(ResultOverlayService);
+
   private betSlipSubject = new BehaviorSubject<BetSelection[]>([]);
   betSlip$ = this.betSlipSubject.asObservable();
 
-  private betHistorySubject = new BehaviorSubject<Bet[]>([]);
-  betHistory$ = this.betHistorySubject.asObservable();
+  private statsSubject = new BehaviorSubject<any>({
+    totalBets: 0,
+    won: 0,
+    lost: 0,
+    pending: 0,
+    profit: 0,
+    totalStaked: 0,
+    winRate: 0,
+    roi: '0'
+  });
+  stats$ = this.statsSubject.asObservable();
 
-  // Mock historial
-  private mockHistory: BetHistoryItem[] = [
-    { event: 'Real Madrid vs Atlético', pick: 'Real Madrid', odds: 1.85, amount: 50, result: 'won', profit: 42.50 },
-    { event: 'Lakers vs Celtics', pick: 'Lakers', odds: 2.10, amount: 30, result: 'lost', profit: -30 },
-    { event: 'Nadal vs Alcaraz', pick: 'Nadal', odds: 2.30, amount: 25, result: 'won', profit: 32.50 },
-    { event: 'Man City vs Arsenal', pick: 'Empate', odds: 3.50, amount: 20, result: 'lost', profit: -20 },
-    { event: 'Barcelona vs Sevilla', pick: 'Barcelona', odds: 1.55, amount: 100, result: 'won', profit: 55 },
-  ];
+  constructor() {
+    this.authService.user$.subscribe(user => {
+      if (user) {
+        this.loadStats();
+      } else {
+        this.statsSubject.next({
+          totalBets: 0, won: 0, lost: 0, pending: 0,
+          profit: 0, totalStaked: 0, winRate: 0, roi: '0'
+        });
+      }
+    });
+  }
 
-  constructor() {}
+  private getHeaders(): HttpHeaders {
+    const token = this.authService.token;
+    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+  }
+
+  private loadStats(): void {
+    if (!this.authService.isLoggedIn) return;
+
+    this.http.get(`${this.API_URL}/bets/stats`, { headers: this.getHeaders() })
+      .pipe(catchError(() => of({
+        totalBets: 0, won: 0, lost: 0, pending: 0,
+        profit: 0, totalStaked: 0, winRate: 0, roi: '0'
+      })))
+      .subscribe(stats => this.statsSubject.next(stats));
+  }
 
   addToSlip(event: SportEvent, pick: 'home' | 'draw' | 'away', odds: number): void {
     const current = this.betSlipSubject.value;
@@ -32,10 +67,8 @@ export class BetService {
 
     if (existingIndex >= 0) {
       if (current[existingIndex].pick === pick) {
-        // Remover si es la misma selección
         current.splice(existingIndex, 1);
       } else {
-        // Reemplazar con nueva selección
         current[existingIndex] = selection;
       }
     } else {
@@ -59,7 +92,8 @@ export class BetService {
   }
 
   get totalOdds(): number {
-    return this.betSlipSubject.value.reduce((acc, s) => acc * s.odds, 1);
+    const odds = this.betSlipSubject.value.reduce((acc, s) => acc * s.odds, 1);
+    return Math.round(odds * 100) / 100;
   }
 
   isSelected(eventId: string, pick: string): boolean {
@@ -67,52 +101,88 @@ export class BetService {
     return selection?.pick === pick;
   }
 
-  placeBet(stake: number): Observable<{ won: boolean; amount: number }> {
+  placeBet(stake: number): Observable<any> {
     const selections = this.betSlipSubject.value;
     const totalOdds = this.totalOdds;
     const potentialWin = stake * totalOdds;
-    
-    // Simular resultado (40% probabilidad de ganar)
-    const won = Math.random() > 0.4;
-    const amount = won ? potentialWin - stake : stake;
 
-    // Agregar al historial
-    if (selections.length > 0) {
-      const historyItem: BetHistoryItem = {
-        event: selections.map(s => `${s.event.team1} vs ${s.event.team2}`).join(', '),
-        pick: selections.map(s => s.pickLabel).join(', '),
-        odds: totalOdds,
-        amount: stake,
-        result: won ? 'won' : 'lost',
-        profit: won ? potentialWin - stake : -stake
-      };
-      this.mockHistory.unshift(historyItem);
-    }
-
-    this.clearSlip();
-    return of({ won, amount }).pipe(delay(2000));
-  }
-
-  getBetHistory(): BetHistoryItem[] {
-    return this.mockHistory;
-  }
-
-  getStats() {
-    const history = this.mockHistory;
-    const won = history.filter(b => b.result === 'won');
-    const lost = history.filter(b => b.result === 'lost');
-    const totalProfit = history.reduce((acc, b) => acc + b.profit, 0);
-    const totalStaked = history.reduce((acc, b) => acc + b.amount, 0);
-
-    return {
-      totalBets: history.length,
-      won: won.length,
-      lost: lost.length,
-      pending: 0,
-      profit: totalProfit,
-      totalStaked,
-      winRate: history.length > 0 ? Math.round((won.length / history.length) * 100) : 0,
-      roi: totalStaked > 0 ? ((totalProfit / totalStaked) * 100).toFixed(1) : '0'
+    const body = {
+      selections: selections.map(s => ({
+        eventId: s.eventId,
+        eventName: `${s.event.team1} vs ${s.event.team2}`,
+        market: 'Resultado Final',
+        pick: s.pick,
+        pickLabel: s.pickLabel,
+        odds: s.odds,
+      })),
+      stake,
+      totalOdds,
+      potentialWin,
     };
+
+    return this.http.post(`${this.API_URL}/bets`, body, { headers: this.getHeaders() }).pipe(
+      tap((response: any) => {
+        this.clearSlip();
+        this.authService.updateBalance(response.newBalance);
+        this.loadStats();
+        
+        // Simular resultado después de 5 segundos
+        setTimeout(() => {
+          this.simulateBetResult(response.bet._id, stake, potentialWin);
+        }, 5000);
+      }),
+      catchError(err => {
+        console.error('Error al realizar apuesta:', err);
+        throw err;
+      })
+    );
+  }
+
+  private simulateBetResult(betId: string, stake: number, potentialWin: number): void {
+    this.http.post<any>(`${this.API_URL}/bets/${betId}/simulate`, {}, { headers: this.getHeaders() })
+      .subscribe({
+        next: (result) => {
+          // Mostrar resultado
+          if (result.won) {
+            this.resultService.showWin(potentialWin - stake);
+          } else {
+            this.resultService.showLoss(stake);
+          }
+          
+          // Refrescar datos del usuario
+          this.refreshUserData();
+          this.loadStats();
+        },
+        error: (err) => console.error('Error simulando resultado:', err)
+      });
+  }
+
+  private refreshUserData(): void {
+    this.http.get<any>(`${this.API_URL}/auth/me`, { headers: this.getHeaders() })
+      .subscribe({
+        next: (userData) => {
+          if (userData) {
+            this.authService.updateBalance(userData.saldo);
+          }
+        },
+        error: (err) => console.error('Error refrescando usuario:', err)
+      });
+  }
+
+  getBetHistory(): Observable<any[]> {
+    if (!this.authService.isLoggedIn) {
+      return of([]);
+    }
+    return this.http.get<any[]>(`${this.API_URL}/bets`, { headers: this.getHeaders() }).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  getStats(): any {
+    return this.statsSubject.value;
+  }
+
+  refreshStats(): void {
+    this.loadStats();
   }
 }

@@ -19,16 +19,47 @@ export class StatsComponent implements OnInit, AfterViewInit {
 
   private betService = inject(BetService);
 
-  stats = this.betService.getStats();
-  history = this.betService.getBetHistory();
+  stats: any = {
+    totalBets: 0,
+    won: 0,
+    lost: 0,
+    pending: 0,
+    profit: 0,
+    totalStaked: 0,
+    winRate: 0,
+    roi: '0'
+  };
+  
+  history: any[] = [];
+  isLoading = true;
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.loadData();
+  }
 
   ngAfterViewInit(): void {
-    this.initCharts();
+    // Esperar a que los datos carguen antes de inicializar gráficos
+    setTimeout(() => this.initCharts(), 500);
+  }
+
+  private loadData(): void {
+    this.stats = this.betService.getStats();
+    
+    this.betService.getBetHistory().subscribe({
+      next: (bets) => {
+        this.history = bets.slice(0, 10); // Últimas 10 apuestas
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error cargando historial:', err);
+        this.isLoading = false;
+      }
+    });
   }
 
   private initCharts(): void {
+    if (!this.balanceChartRef || !this.sportChartRef) return;
+
     // Balance Chart
     new Chart(this.balanceChartRef.nativeElement, {
       type: 'line',
@@ -68,5 +99,23 @@ export class StatsComponent implements OnInit, AfterViewInit {
         plugins: { legend: { position: 'right', labels: { color: '#9ca3af' } } }
       }
     });
+  }
+
+  getBetEventName(bet: any): string {
+    if (bet.selections && bet.selections.length > 0) {
+      return bet.selections.map((s: any) => s.eventName).join(', ');
+    }
+    return bet.event || 'Evento desconocido';
+  }
+
+  getBetPick(bet: any): string {
+    if (bet.selections && bet.selections.length > 0) {
+      return bet.selections.map((s: any) => s.pickLabel).join(', ');
+    }
+    return bet.pick || '';
+  }
+
+  getProfit(bet: any): number {
+    return bet.profit || (bet.status === 'won' ? bet.potentialWin - bet.stake : -bet.stake);
   }
 }

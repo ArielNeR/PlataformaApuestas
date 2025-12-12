@@ -6,6 +6,7 @@ import { AuthService } from './services/auth.service';
 import { BetService } from './services/bet.service';
 import { BetSlipComponent } from './components/bet-slip/bet-slip.component';
 import { ResultOverlayComponent } from './components/result-overlay/result-overlay.component';
+import { DepositModalComponent } from './components/deposit-modal/deposit-modal.component';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +17,8 @@ import { ResultOverlayComponent } from './components/result-overlay/result-overl
     RouterLink,
     RouterLinkActive,
     BetSlipComponent,
-    ResultOverlayComponent
+    ResultOverlayComponent,
+    DepositModalComponent
   ],
   templateUrl: './app.component.html',
   styles: []
@@ -31,6 +33,7 @@ export class AppComponent {
 
   demoMode = true;
   showUserMenu = false;
+  showDepositModal = false;
 
   toggleDemoMode(): void {
     this.demoMode = !this.demoMode;
@@ -38,6 +41,15 @@ export class AppComponent {
 
   toggleUserMenu(): void {
     this.showUserMenu = !this.showUserMenu;
+  }
+
+  openDeposit(): void {
+    this.showDepositModal = true;
+    this.showUserMenu = false;
+  }
+
+  onDeposited(newBalance: number): void {
+    this.showDepositModal = false;
   }
 
   logout(): void {

@@ -1,5 +1,5 @@
 // Frontend/src/app/components/sport-filter/sport-filter.component.ts
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface SportOption {
@@ -16,18 +16,37 @@ interface SportOption {
     <div class="flex gap-3 overflow-x-auto carousel pb-2">
       <button *ngFor="let sport of sports"
               (click)="selectSport(sport.id)"
-              class="flex items-center gap-2 px-5 py-3 rounded-xl whitespace-nowrap transition"
+              class="flex items-center gap-2 px-5 py-3 rounded-xl whitespace-nowrap transition-all"
               [class.bg-indigo-600]="selectedSport === sport.id"
+              [class.text-white]="selectedSport === sport.id"
               [class.bg-gray-800]="selectedSport !== sport.id"
+              [class.text-gray-300]="selectedSport !== sport.id"
               [class.hover:bg-indigo-500]="selectedSport === sport.id"
-              [class.hover:bg-gray-700]="selectedSport !== sport.id">
+              [class.hover:bg-gray-700]="selectedSport !== sport.id"
+              [class.scale-105]="selectedSport === sport.id">
         <i [class]="sport.icon"></i>
-        {{ sport.name }}
+        <span>{{ sport.name }}</span>
+        <span *ngIf="getCount(sport.id) > 0" 
+              class="ml-1 px-2 py-0.5 text-xs rounded-full"
+              [class.bg-white/20]="selectedSport === sport.id"
+              [class.bg-gray-700]="selectedSport !== sport.id">
+          {{ getCount(sport.id) }}
+        </span>
       </button>
     </div>
-  `
+  `,
+  styles: [`
+    .carousel {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .carousel::-webkit-scrollbar {
+      display: none;
+    }
+  `]
 })
 export class SportFilterComponent {
+  @Input() eventCounts: Record<string, number> = {};
   @Output() sportChange = new EventEmitter<string>();
   
   selectedSport = 'all';
@@ -44,5 +63,12 @@ export class SportFilterComponent {
   selectSport(sportId: string): void {
     this.selectedSport = sportId;
     this.sportChange.emit(sportId);
+  }
+
+  getCount(sportId: string): number {
+    if (sportId === 'all') {
+      return Object.values(this.eventCounts).reduce((a, b) => a + b, 0);
+    }
+    return this.eventCounts[sportId] || 0;
   }
 }

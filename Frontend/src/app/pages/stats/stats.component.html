@@ -15,7 +15,7 @@
         <span class="text-gray-400 text-sm">Total Apostado</span>
         <i class="fas fa-coins text-yellow-400"></i>
       </div>
-      <p class="text-2xl font-bold">${{ stats.totalStaked.toLocaleString() }}</p>
+      <p class="text-2xl font-bold">${{ stats.totalStaked | number:'1.0-0' }}</p>
       <p class="text-green-400 text-sm mt-1">+12% este mes</p>
     </div>
     
@@ -24,8 +24,10 @@
         <span class="text-gray-400 text-sm">Ganancias</span>
         <i class="fas fa-trophy text-green-400"></i>
       </div>
-      <p class="text-2xl font-bold" [class.text-green-400]="stats.profit > 0" [class.text-red-400]="stats.profit < 0">
-        {{ stats.profit > 0 ? '+' : '' }}${{ stats.profit.toFixed(2) }}
+      <p class="text-2xl font-bold" 
+         [class.text-green-400]="stats.profit > 0" 
+         [class.text-red-400]="stats.profit < 0">
+        {{ stats.profit > 0 ? '+' : '' }}${{ stats.profit | number:'1.2-2' }}
       </p>
       <p class="text-green-400 text-sm mt-1">+8% este mes</p>
     </div>
@@ -44,7 +46,7 @@
         <span class="text-gray-400 text-sm">ROI</span>
         <i class="fas fa-chart-pie text-indigo-400"></i>
       </div>
-      <p class="text-2xl font-bold" [class.text-green-400]="+stats.roi > 0">+{{ stats.roi }}%</p>
+      <p class="text-2xl font-bold text-green-400">+{{ stats.roi }}%</p>
       <p class="text-gray-400 text-sm mt-1">Retorno de inversión</p>
     </div>
   </div>
@@ -64,22 +66,41 @@
   <!-- Recent Bets -->
   <div class="glass rounded-2xl p-6">
     <h3 class="text-lg font-bold mb-4">Historial Reciente</h3>
-    <div class="space-y-3">
+    
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="flex justify-center py-8">
+      <div class="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && history.length === 0" class="text-center py-8 text-gray-400">
+      <i class="fas fa-history text-4xl mb-3 opacity-50"></i>
+      <p>No hay apuestas en el historial</p>
+    </div>
+
+    <!-- History List -->
+    <div class="space-y-3" *ngIf="!isLoading && history.length > 0">
       <div *ngFor="let bet of history" 
            class="flex items-center justify-between p-3 bg-gray-800/50 rounded-xl">
         <div class="flex-1">
-          <p class="font-medium">{{ bet.event }}</p>
-          <p class="text-sm text-gray-400">{{ bet.pick }} &#64; {{ bet.odds }}</p>
+          <p class="font-medium">{{ getBetEventName(bet) }}</p>
+          <p class="text-sm text-gray-400">{{ getBetPick(bet) }} &#64; {{ bet.totalOdds?.toFixed(2) || '0.00' }}</p>
         </div>
         <div class="text-right">
-          <p class="font-bold" [class.text-green-400]="bet.result === 'won'" [class.text-red-400]="bet.result === 'lost'">
-            {{ bet.profit > 0 ? '+' : '' }}${{ bet.profit.toFixed(2) }}
+          <p class="font-bold" 
+             [class.text-green-400]="bet.status === 'won'" 
+             [class.text-red-400]="bet.status === 'lost'"
+             [class.text-yellow-400]="bet.status === 'pending'">
+            <ng-container *ngIf="bet.status === 'won'">+${{ getProfit(bet) | number:'1.2-2' }}</ng-container>
+            <ng-container *ngIf="bet.status === 'lost'">-${{ bet.stake | number:'1.2-2' }}</ng-container>
+            <ng-container *ngIf="bet.status === 'pending'">Pendiente</ng-container>
           </p>
-          <p class="text-xs text-gray-400">Apuesta: ${{ bet.amount }}</p>
+          <p class="text-xs text-gray-400">Apuesta: ${{ bet.stake }}</p>
         </div>
         <div class="ml-4">
-          <i *ngIf="bet.result === 'won'" class="fas fa-check-circle text-green-400 text-xl"></i>
-          <i *ngIf="bet.result === 'lost'" class="fas fa-times-circle text-red-400 text-xl"></i>
+          <i *ngIf="bet.status === 'won'" class="fas fa-check-circle text-green-400 text-xl"></i>
+          <i *ngIf="bet.status === 'lost'" class="fas fa-times-circle text-red-400 text-xl"></i>
+          <i *ngIf="bet.status === 'pending'" class="fas fa-clock text-yellow-400 text-xl"></i>
         </div>
       </div>
     </div>

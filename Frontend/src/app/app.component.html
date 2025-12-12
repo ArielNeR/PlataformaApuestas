@@ -40,26 +40,15 @@
         <!-- User Section -->
         <div class="flex items-center gap-4">
           
-          <!-- Demo Toggle -->
-          <div class="hidden sm:flex items-center gap-2 bg-gray-800/50 px-3 py-2 rounded-lg">
-            <span class="text-xs text-gray-400">Demo</span>
-            <button (click)="toggleDemoMode()" 
-                    class="w-12 h-6 rounded-full relative transition-colors"
-                    [class.bg-green-600]="demoMode"
-                    [class.bg-gray-700]="!demoMode">
-              <span class="absolute top-1 w-4 h-4 bg-white rounded-full transition-all"
-                    [class.left-1]="!demoMode"
-                    [class.left-7]="demoMode"></span>
-            </button>
-          </div>
-
           <!-- User Logged In -->
           <ng-container *ngIf="user$ | async as user">
             <!-- Balance -->
-            <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 rounded-lg flex items-center gap-2">
+            <button (click)="openDeposit()" 
+                    class="bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition">
               <i class="fas fa-wallet"></i>
-              <span class="font-bold">${{ user.saldo?.toLocaleString('es-AR') || '0' }}</span>
-            </div>
+              <span class="font-bold">${{ user.saldo | number:'1.0-0' }}</span>
+              <i class="fas fa-plus-circle text-sm"></i>
+            </button>
 
             <!-- Avatar -->
             <div class="relative">
@@ -71,13 +60,19 @@
 
               <!-- Dropdown -->
               <div *ngIf="showUserMenu" 
-                   class="absolute right-0 mt-2 w-48 glass rounded-xl shadow-xl animate-slide-up overflow-hidden">
+                   class="absolute right-0 mt-2 w-56 glass rounded-xl shadow-xl animate-slide-up overflow-hidden">
                 <div class="p-3 border-b border-gray-700">
                   <p class="font-bold">{{ user.username }}</p>
                   <p class="text-sm text-gray-400">{{ user.email }}</p>
-                  <span *ngIf="user.esDemo" class="text-xs bg-purple-600 px-2 py-0.5 rounded-full">DEMO</span>
+                  <div class="flex gap-2 mt-2">
+                    <span *ngIf="user.esDemo" class="text-xs bg-purple-600 px-2 py-0.5 rounded-full">DEMO</span>
+                  </div>
                 </div>
                 <div class="p-2">
+                  <button (click)="openDeposit()"
+                          class="w-full text-left px-3 py-2 rounded-lg hover:bg-green-600/20 text-green-400 transition flex items-center gap-2">
+                    <i class="fas fa-plus-circle"></i> Depositar
+                  </button>
                   <a routerLink="/my-bets" (click)="showUserMenu = false"
                      class="block px-3 py-2 rounded-lg hover:bg-gray-700 transition">
                     <i class="fas fa-ticket mr-2"></i> Mis Apuestas
@@ -120,6 +115,12 @@
 
   <!-- Result Overlay -->
   <app-result-overlay></app-result-overlay>
+
+  <!-- Deposit Modal -->
+  <app-deposit-modal *ngIf="showDepositModal" 
+                     (close)="showDepositModal = false"
+                     (deposited)="onDeposited($event)">
+  </app-deposit-modal>
 
   <!-- Mobile Navigation -->
   <nav class="fixed bottom-0 left-0 right-0 glass md:hidden z-40">

@@ -37,6 +37,21 @@ export class AuthService {
     };
   }
 
+  async getUser(userId: string) {
+  const user: any = await this.usersService.findOne(userId);
+  if (!user) {
+    throw new BadRequestException('Usuario no encontrado');
+  }
+
+  return {
+    id: user._id.toString(),
+    email: user.email,
+    username: user.username,
+    saldo: user.saldo,
+    esDemo: user.esDemo,
+  };
+}
+
   async login(email: string, password: string) {
     const user: any = await this.usersService.findByEmail(email.toLowerCase());
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
