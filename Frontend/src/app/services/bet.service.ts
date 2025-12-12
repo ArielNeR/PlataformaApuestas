@@ -1,4 +1,3 @@
-// Frontend/src/app/services/bet.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, of, catchError } from 'rxjs';
@@ -18,14 +17,8 @@ export class BetService {
   betSlip$ = this.betSlipSubject.asObservable();
 
   private statsSubject = new BehaviorSubject<any>({
-    totalBets: 0,
-    won: 0,
-    lost: 0,
-    pending: 0,
-    profit: 0,
-    totalStaked: 0,
-    winRate: 0,
-    roi: '0'
+    totalBets: 0, won: 0, lost: 0, pending: 0,
+    profit: 0, totalStaked: 0, winRate: 0, roi: '0'
   });
   stats$ = this.statsSubject.asObservable();
 
@@ -38,6 +31,7 @@ export class BetService {
           totalBets: 0, won: 0, lost: 0, pending: 0,
           profit: 0, totalStaked: 0, winRate: 0, roi: '0'
         });
+        this.clearSlip();
       }
     });
   }
@@ -49,7 +43,6 @@ export class BetService {
 
   private loadStats(): void {
     if (!this.authService.isLoggedIn) return;
-
     this.http.get(`${this.API_URL}/bets/stats`, { headers: this.getHeaders() })
       .pipe(catchError(() => of({
         totalBets: 0, won: 0, lost: 0, pending: 0,
@@ -61,8 +54,8 @@ export class BetService {
   addToSlip(event: SportEvent, pick: 'home' | 'draw' | 'away', odds: number): void {
     const current = this.betSlipSubject.value;
     const existingIndex = current.findIndex(s => s.eventId === event.id);
-    
     const pickLabel = pick === 'home' ? event.team1 : pick === 'away' ? event.team2 : 'Empate';
+    
     const selection: BetSelection = { eventId: event.id, event, pick, odds, pickLabel };
 
     if (existingIndex >= 0) {
@@ -74,7 +67,6 @@ export class BetService {
     } else {
       current.push(selection);
     }
-
     this.betSlipSubject.next([...current]);
   }
 
@@ -104,7 +96,7 @@ export class BetService {
   placeBet(stake: number): Observable<any> {
     const selections = this.betSlipSubject.value;
     const totalOdds = this.totalOdds;
-    const potentialWin = stake * totalOdds;
+    const potentialWin = Math.round(stake * totalOdds * 100) / 100;
 
     const body = {
       selections: selections.map(s => ({
@@ -113,59 +105,60 @@ export class BetService {
         market: 'Resultado Final',
         pick: s.pick,
         pickLabel: s.pickLabel,
-        odds: s.odds,
+        odds: s.odds
       })),
       stake,
       totalOdds,
-      potentialWin,
+      potentialWin
     };
 
-    return this.http.post(`${this.API_URL}/bets`, body, { headers: this.getHeaders() }).pipe(
-      tap((response: any) => {
-        this.clearSlip();
-        this.authService.updateBalance(response.newBalance);
-        this.loadStats();
-        
-        // Simular resultado después de 5 segundos
-        setTimeout(() => {
-          this.simulateBetResult(response.bet._id, stake, potentialWin);
-        }, 5000);
-      }),
-      catchError(err => {
-        console.error('Error al realizar apuesta:', err);
-        throw err;
-      })
-    );
+    return this.http.post(`${this.API_URL}/bets`, body, { headers: this.getHeaders() })
+      .pipe(
+        tap((response: any) => {
+          console.log('✅ Apuesta realizada:', response);
+          
+          // Limpiar el slip
+          this.clearSlip();
+          
+          // Actualizar saldo inmediatamente
+          if (response.newBalance !== undefined) {
+            this.authService.updateBalance(response.newBalance);
+          }
+          
+          // Recargar estadísticas
+          this.loadStats();
+
+          // Simular resultado después de 5 segundos
+          if (response.bet && response.bet._id) {
+            setTimeout(() => {
+              this.simulateBetResult(response.bet._id, stake, potentialWin);
+            }, 5000);
+          }
+        }),
+        catchError(err => {
+          console.error('❌ Error al realizar apuesta:', err);
+          throw err;
+        })
+      );
   }
 
   private simulateBetResult(betId: string, stake: number, potentialWin: number): void {
     this.http.post<any>(`${this.API_URL}/bets/${betId}/simulate`, {}, { headers: this.getHeaders() })
       .subscribe({
         next: (result) => {
-          // Mostrar resultado
+          console.log('🎲 Resultado simulado:', result);
+          
           if (result.won) {
             this.resultService.showWin(potentialWin - stake);
           } else {
             this.resultService.showLoss(stake);
           }
           
-          // Refrescar datos del usuario
-          this.refreshUserData();
+          // Refrescar datos del usuario para obtener nuevo saldo
+          this.authService.refreshUser();
           this.loadStats();
         },
         error: (err) => console.error('Error simulando resultado:', err)
-      });
-  }
-
-  private refreshUserData(): void {
-    this.http.get<any>(`${this.API_URL}/auth/me`, { headers: this.getHeaders() })
-      .subscribe({
-        next: (userData) => {
-          if (userData) {
-            this.authService.updateBalance(userData.saldo);
-          }
-        },
-        error: (err) => console.error('Error refrescando usuario:', err)
       });
   }
 
@@ -173,9 +166,8 @@ export class BetService {
     if (!this.authService.isLoggedIn) {
       return of([]);
     }
-    return this.http.get<any[]>(`${this.API_URL}/bets`, { headers: this.getHeaders() }).pipe(
-      catchError(() => of([]))
-    );
+    return this.http.get<any[]>(`${this.API_URL}/bets`, { headers: this.getHeaders() })
+      .pipe(catchError(() => of([])));
   }
 
   getStats(): any {

@@ -1,93 +1,125 @@
-<!-- Frontend/src/app/components/event-card/event-card.component.html -->
-<div class="glass rounded-2xl overflow-hidden card-hover cursor-pointer"
-     [class.w-72]="size === 'small'"
-     [class.flex-shrink-0]="size === 'small'">
+<div 
+  [class]="'glass rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02] ' + 
+    (featured ? 'ring-2 ring-yellow-400/50' : '') + 
+    (isLive || event.status === 'live' ? 'ring-2 ring-red-500/50' : '')">
   
-  <!-- Header con imagen/gradiente -->
-  <div class="relative p-4"
-       [class.h-32]="size === 'small'"
-       [class.h-40]="size !== 'small'"
-       [ngClass]="event.status === 'live' ? 'bg-gradient-to-br from-red-600/30 to-orange-600/30' : 'bg-gradient-to-br from-indigo-600/30 to-purple-600/30'">
-    
-    <!-- Badge -->
-    <div class="absolute top-3 left-3">
-      <ng-container *ngIf="event.status === 'live'">
-        <div class="flex items-center gap-2 bg-red-600/80 px-2 py-1 rounded-full text-xs">
-          <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-          {{ event.minute }}'
-        </div>
-      </ng-container>
-      <ng-container *ngIf="event.status === 'scheduled'">
-        <div class="bg-indigo-600/80 px-2 py-1 rounded-full text-xs">
-          {{ formatTime(event.startTime) }}
-        </div>
-      </ng-container>
+  <!-- Header -->
+  <div class="px-4 py-3 border-b border-gray-700/50 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <i [class]="event.sportIcon + ' text-indigo-400'"></i>
+      <span class="text-sm text-gray-400 truncate max-w-[150px]">{{ event.league }}</span>
     </div>
-
-    <!-- League -->
-    <div class="absolute top-3 right-3 text-xs text-gray-300">{{ event.league }}</div>
-
-    <!-- Teams -->
-    <div class="flex items-center justify-between" [class.mt-8]="size === 'small'" [class.mt-10]="size !== 'small'">
-      <div class="text-center flex-1">
-        <img [src]="getFlagUrl(event.flag1)" 
-             class="object-cover rounded mx-auto mb-1"
-             [class.w-10]="size === 'small'" [class.h-7]="size === 'small'"
-             [class.w-12]="size !== 'small'" [class.h-8]="size !== 'small'"
-             [alt]="event.team1">
-        <p class="font-medium truncate" [class.text-sm]="size === 'small'">{{ event.team1 }}</p>
-      </div>
-      
-      <div class="text-center px-4">
-        <ng-container *ngIf="event.status === 'live'">
-          <p class="font-bold" [class.text-2xl]="size === 'small'" [class.text-3xl]="size !== 'small'">
-            {{ event.score1 }} - {{ event.score2 }}
-          </p>
-        </ng-container>
-        <ng-container *ngIf="event.status === 'scheduled'">
-          <p class="font-bold" [class.text-xl]="size === 'small'" [class.text-2xl]="size !== 'small'">VS</p>
-        </ng-container>
-      </div>
-      
-      <div class="text-center flex-1">
-        <img [src]="getFlagUrl(event.flag2)" 
-             class="object-cover rounded mx-auto mb-1"
-             [class.w-10]="size === 'small'" [class.h-7]="size === 'small'"
-             [class.w-12]="size !== 'small'" [class.h-8]="size !== 'small'"
-             [alt]="event.team2">
-        <p class="font-medium truncate" [class.text-sm]="size === 'small'">{{ event.team2 }}</p>
-      </div>
+    <div class="flex items-center gap-2">
+      <ng-container *ngIf="event.status === 'live'; else scheduledTime">
+        <span class="flex items-center gap-1 text-red-400 text-sm font-medium">
+          <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+          {{ event.minute }}'
+        </span>
+      </ng-container>
+      <ng-template #scheduledTime>
+        <span class="text-xs text-gray-500">{{ formattedDate }}</span>
+        <span class="text-sm text-gray-400">{{ formattedTime }}</span>
+      </ng-template>
+      <span *ngIf="featured" class="text-yellow-400">
+        <i class="fas fa-star text-xs"></i>
+      </span>
     </div>
   </div>
 
-  <!-- Odds -->
-  <div class="p-3 flex gap-2">
-    <button class="odds-btn flex-1 bg-gray-800 py-2 rounded-lg text-center"
-            [class.selected]="isSelected('home')"
-            (click)="addToSlip('home', event.odds.home, $event)">
-      <span class="text-xs text-gray-400 block">1</span>
-      <span class="font-bold" [class.text-green-400]="event.status === 'live'">
-        {{ event.odds.home.toFixed(2) }}
-      </span>
-    </button>
-    
-    <button *ngIf="event.odds.draw !== undefined"
-            class="odds-btn flex-1 bg-gray-800 py-2 rounded-lg text-center"
-            [class.selected]="isSelected('draw')"
-            (click)="addToSlip('draw', event.odds.draw!, $event)">
-      <span class="text-xs text-gray-400 block">X</span>
-      <span class="font-bold" [class.text-green-400]="event.status === 'live'">
-        {{ event.odds.draw!.toFixed(2) }}
-      </span>
-    </button>
-    
-    <button class="odds-btn flex-1 bg-gray-800 py-2 rounded-lg text-center"
-            [class.selected]="isSelected('away')"
-            (click)="addToSlip('away', event.odds.away, $event)">
-      <span class="text-xs text-gray-400 block">2</span>
-      <span class="font-bold" [class.text-green-400]="event.status === 'live'">
-        {{ event.odds.away.toFixed(2) }}
-      </span>
+  <!-- Teams -->
+  <div class="p-4">
+    <div class="flex items-center justify-between mb-4">
+      <!-- Team 1 -->
+      <div class="flex-1 text-center">
+        <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center text-2xl overflow-hidden">
+          <img *ngIf="getTeamLogo(event.team1)" 
+               [src]="getTeamLogo(event.team1)" 
+               [alt]="event.team1"
+               class="w-full h-full object-cover"
+               (error)="onImageError($event, event.flag1)">
+          <span *ngIf="!getTeamLogo(event.team1)">{{ event.flag1 }}</span>
+        </div>
+        <p class="font-medium text-sm truncate" [title]="event.team1">{{ event.team1 }}</p>
+      </div>
+
+      <!-- Score / VS -->
+      <div class="px-4">
+        <ng-container *ngIf="event.status === 'live'; else vsLabel">
+          <div class="bg-gray-800 rounded-lg px-4 py-2">
+            <span class="text-2xl font-bold">
+              {{ event.score1 }} - {{ event.score2 }}
+            </span>
+          </div>
+        </ng-container>
+        <ng-template #vsLabel>
+          <span class="text-gray-500 font-bold text-lg">VS</span>
+        </ng-template>
+      </div>
+
+      <!-- Team 2 -->
+      <div class="flex-1 text-center">
+        <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center text-2xl overflow-hidden">
+          <img *ngIf="getTeamLogo(event.team2)" 
+               [src]="getTeamLogo(event.team2)" 
+               [alt]="event.team2"
+               class="w-full h-full object-cover"
+               (error)="onImageError($event, event.flag2)">
+          <span *ngIf="!getTeamLogo(event.team2)">{{ event.flag2 }}</span>
+        </div>
+        <p class="font-medium text-sm truncate" [title]="event.team2">{{ event.team2 }}</p>
+      </div>
+    </div>
+
+    <!-- Odds Buttons -->
+    <div class="grid gap-2 mb-3" [class]="event.odds.draw !== undefined ? 'grid-cols-3' : 'grid-cols-2'">
+      <!-- Home -->
+      <button 
+        (click)="onSelectOdd('home')"
+        [class]="checkSelected('home') 
+          ? 'bg-indigo-600 border-indigo-500 ring-2 ring-indigo-400' 
+          : 'bg-gray-800/50 border-gray-700 hover:border-indigo-500 hover:bg-gray-800'"
+        class="p-3 rounded-lg border transition-all text-center">
+        <div class="text-xs text-gray-400 mb-1">1</div>
+        <div class="font-bold text-lg" [class.text-indigo-400]="checkSelected('home')">
+          {{ event.odds.home | number:'1.2-2' }}
+        </div>
+      </button>
+
+      <!-- Draw (si aplica) -->
+      <button 
+        *ngIf="event.odds.draw !== undefined"
+        (click)="onSelectOdd('draw')"
+        [class]="checkSelected('draw') 
+          ? 'bg-indigo-600 border-indigo-500 ring-2 ring-indigo-400' 
+          : 'bg-gray-800/50 border-gray-700 hover:border-indigo-500 hover:bg-gray-800'"
+        class="p-3 rounded-lg border transition-all text-center">
+        <div class="text-xs text-gray-400 mb-1">X</div>
+        <div class="font-bold text-lg" [class.text-indigo-400]="checkSelected('draw')">
+          {{ event.odds.draw | number:'1.2-2' }}
+        </div>
+      </button>
+
+      <!-- Away -->
+      <button 
+        (click)="onSelectOdd('away')"
+        [class]="checkSelected('away') 
+          ? 'bg-indigo-600 border-indigo-500 ring-2 ring-indigo-400' 
+          : 'bg-gray-800/50 border-gray-700 hover:border-indigo-500 hover:bg-gray-800'"
+        class="p-3 rounded-lg border transition-all text-center">
+        <div class="text-xs text-gray-400 mb-1">2</div>
+        <div class="font-bold text-lg" [class.text-indigo-400]="checkSelected('away')">
+          {{ event.odds.away | number:'1.2-2' }}
+        </div>
+      </button>
+    </div>
+
+    <!-- Ver Detalles Button -->
+    <button 
+      (click)="openDetails()"
+      class="w-full py-2 text-center text-sm text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition flex items-center justify-center gap-2">
+      <i class="fas fa-chart-bar"></i>
+      Ver detalles
+      <i class="fas fa-chevron-right text-xs"></i>
     </button>
   </div>
 </div>

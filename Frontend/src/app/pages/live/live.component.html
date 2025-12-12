@@ -1,40 +1,99 @@
-<!-- Frontend/src/app/pages/live/live.component.html -->
-<div class="max-w-7xl mx-auto px-4 py-8">
+<div class="max-w-7xl mx-auto px-4 py-6">
   
   <!-- Header -->
-  <div class="mb-6">
-    <h1 class="text-3xl font-bold flex items-center gap-3">
-      <span class="relative flex h-4 w-4">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
-      </span>
-      Eventos en Vivo
-    </h1>
-    <p class="text-gray-400 mt-2">{{ filteredEvents.length }} eventos en curso</p>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-bold flex items-center gap-3">
+        <span class="relative">
+          <i class="fas fa-broadcast-tower text-red-500"></i>
+          <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></span>
+        </span>
+        Eventos En Vivo
+      </h1>
+      <p class="text-gray-400 mt-1">Apuesta en tiempo real con cuotas dinámicas</p>
+    </div>
+    <button (click)="refreshEvents()" class="bg-gray-800 hover:bg-gray-700 p-3 rounded-xl transition">
+      <i class="fas fa-sync-alt"></i>
+    </button>
   </div>
 
-  <!-- Filters -->
-  <div class="mb-6">
-    <app-sport-filter (sportChange)="onSportChange($event)"></app-sport-filter>
+  <!-- Error State -->
+  <div *ngIf="error" class="bg-red-500/20 border border-red-500 rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-3">
+      <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+      <div>
+        <h3 class="font-bold text-red-400">Error de conexión</h3>
+        <p class="text-gray-400 text-sm">{{ error }}</p>
+      </div>
+      <button (click)="refreshEvents()" class="ml-auto bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
+        <i class="fas fa-refresh mr-2"></i>Reintentar
+      </button>
+    </div>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="isLoading" class="flex justify-center py-20">
-    <div class="animate-spin w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
+  <!-- Loading State -->
+  <div *ngIf="loading && !error" class="flex flex-col items-center justify-center py-20">
+    <div class="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p class="text-gray-400">Cargando eventos en vivo...</p>
   </div>
 
-  <!-- Empty State -->
-  <div *ngIf="!isLoading && filteredEvents.length === 0" class="text-center py-20">
-    <i class="fas fa-broadcast-tower text-6xl text-gray-600 mb-4"></i>
-    <h3 class="text-2xl font-bold text-gray-400">No hay eventos en vivo</h3>
-    <p class="text-gray-500 mt-2">Vuelve más tarde para ver eventos en directo</p>
-  </div>
+  <!-- Content -->
+  <ng-container *ngIf="!loading && !error">
+    
+    <!-- Sport Tabs -->
+    <div class="flex gap-2 overflow-x-auto pb-4 scrollbar-hide mb-6">
+      <button 
+        *ngFor="let sport of sports"
+        (click)="filterBySport(sport.id)"
+        [class]="selectedSport === sport.id 
+          ? 'bg-red-600 text-white border-red-500' 
+          : 'bg-gray-800/50 text-gray-400 border-gray-700 hover:border-gray-600'"
+        class="px-4 py-3 rounded-xl flex items-center gap-2 whitespace-nowrap transition border">
+        <i [class]="sport.icon"></i>
+        <span>{{ sport.name }}</span>
+        <span *ngIf="sport.count > 0" class="bg-white/20 px-2 py-0.5 rounded-full text-xs">
+          {{ sport.count }}
+        </span>
+      </button>
+    </div>
 
-  <!-- Events Grid -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" *ngIf="!isLoading && filteredEvents.length > 0">
-    <app-event-card *ngFor="let event of filteredEvents" 
-                    [event]="event" 
-                    size="medium">
-    </app-event-card>
-  </div>
+    <!-- Live Events Grid -->
+    <div *ngIf="filteredEvents.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <app-event-card 
+        *ngFor="let event of filteredEvents; trackBy: trackByEventId"
+        [event]="event"
+        [isLive]="true"
+        [isSelected]="isSelected"
+        (selectOdd)="onSelectOdd($event.event, $event.pick, $event.odds)"
+        (viewDetails)="openEventDetails($event)">
+      </app-event-card>
+    </div>
+
+    <!-- Empty State CORREGIDO -->
+    <div *ngIf="filteredEvents.length === 0" class="text-center py-20">
+      <div class="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+        <i class="fas fa-tv text-4xl text-gray-600"></i>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-400 mb-2">No hay eventos en vivo</h3>
+      <p class="text-gray-500 mb-6">
+        {{ selectedSport === 'all' 
+          ? 'No hay partidos en directo en este momento' 
+          : 'No hay partidos de ' + selectedSportName + ' en vivo' 
+        }}
+      </p>
+      <button (click)="refreshEvents()" class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-xl font-bold transition">
+        <i class="fas fa-sync-alt mr-2"></i>Actualizar
+      </button>
+    </div>
+
+  </ng-container>
+
+  <!-- Event Detail Modal -->
+  <app-event-detail-modal 
+    *ngIf="showDetailModal && selectedEvent"
+    [event]="selectedEvent"
+    [isSelected]="isSelected"
+    (close)="closeDetailModal()"
+    (selectOdd)="onSelectOdd($event.event, $event.pick, $event.odds)">
+  </app-event-detail-modal>
 </div>

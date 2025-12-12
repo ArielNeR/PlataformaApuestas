@@ -1,105 +1,160 @@
-<!-- Frontend/src/app/pages/home/home.component.html -->
-<!-- Hero Banner -->
-<div class="relative h-80 md:h-96 overflow-hidden cursor-pointer" (click)="liveEvents[0] && openEventDetail(liveEvents[0])">
-  <div class="absolute inset-0 bg-gradient-to-r from-indigo-900/90 via-purple-900/80 to-transparent z-10"></div>
-  <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1600" 
-       class="absolute inset-0 w-full h-full object-cover" alt="Hero">
-  <div class="relative z-20 max-w-7xl mx-auto px-4 h-full flex items-center">
-    <div class="max-w-xl">
-      <div class="inline-flex items-center gap-2 bg-red-600/80 px-3 py-1 rounded-full text-sm mb-4">
-        <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-        EN VIVO AHORA
+<div class="max-w-7xl mx-auto px-4 py-6">
+  
+  <!-- Error State -->
+  <div *ngIf="error" class="bg-red-500/20 border border-red-500 rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-3">
+      <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+      <div>
+        <h3 class="font-bold text-red-400">Error de conexión</h3>
+        <p class="text-gray-400 text-sm">{{ error }}</p>
       </div>
-      <h1 class="text-4xl md:text-5xl font-bold mb-4">Champions League</h1>
-      <p class="text-xl text-gray-300 mb-6">Real Madrid vs Barcelona • Cuartos de Final</p>
-      <div class="flex gap-4">
-        <a routerLink="/live" 
-           class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 rounded-xl font-bold hover:opacity-90 transition flex items-center gap-2">
-          <i class="fas fa-play"></i> Apostar Ahora
-        </a>
-        <button (click)="liveEvents[0] && openEventDetail(liveEvents[0]); $event.stopPropagation()"
-                class="bg-white/10 backdrop-blur px-6 py-3 rounded-xl font-bold hover:bg-white/20 transition flex items-center gap-2">
-          <i class="fas fa-info-circle"></i> Ver Detalles
-        </button>
-      </div>
+      <button (click)="refreshEvents()" class="ml-auto bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
+        <i class="fas fa-refresh mr-2"></i>Reintentar
+      </button>
     </div>
   </div>
-</div>
 
-<!-- Sports Filter -->
-<div class="max-w-7xl mx-auto px-4 py-6">
-  <app-sport-filter [eventCounts]="eventCounts" (sportChange)="onSportChange($event)"></app-sport-filter>
-</div>
+  <!-- Loading State -->
+  <div *ngIf="loading && !error" class="flex flex-col items-center justify-center py-20">
+    <div class="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p class="text-gray-400">Cargando eventos...</p>
+  </div>
 
-<!-- Live Events Carousel -->
-<div class="max-w-7xl mx-auto px-4 mb-8" *ngIf="liveEvents.length > 0">
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-2xl font-bold flex items-center gap-3">
-      <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-      En Vivo
-      <span class="text-sm font-normal text-gray-400">({{ liveEvents.length }})</span>
-    </h2>
-    <a routerLink="/live" class="text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
-      Ver todos <i class="fas fa-chevron-right"></i>
-    </a>
-  </div>
-  <div class="carousel flex gap-4 overflow-x-auto pb-4">
-    <app-event-card *ngFor="let event of liveEvents" 
-                    [event]="event" 
-                    size="small"
-                    (cardClick)="openEventDetail($event)">
-    </app-event-card>
-  </div>
-</div>
+  <!-- Content -->
+  <ng-container *ngIf="!loading && !error">
+    
+    <!-- Hero Banner CON IMAGEN -->
+    <div class="relative overflow-hidden rounded-2xl mb-8 h-64 md:h-80">
+      <!-- Background Image -->
+      <div class="absolute inset-0">
+        <img src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=80" 
+             alt="Football Stadium" 
+             class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
+      </div>
+      
+      <!-- Content -->
+      <div class="relative z-10 h-full flex flex-col justify-center p-8">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+          ¡Bienvenido a <span class="text-yellow-400">BetPro</span>!
+        </h1>
+        <p class="text-xl text-white/80 mb-6 max-w-lg">
+          Las mejores cuotas en deportes y eSports. Apuesta en vivo y gana.
+        </p>
+        <div class="flex gap-4">
+          <a routerLink="/live" 
+             class="bg-red-500 hover:bg-red-600 px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition shadow-lg shadow-red-500/30">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+            </span>
+            Ver En Vivo
+          </a>
+          <a routerLink="/modes" 
+             class="bg-white/20 hover:bg-white/30 px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition backdrop-blur">
+            <i class="fas fa-gamepad"></i>
+            Modos de Juego
+          </a>
+        </div>
+      </div>
 
-<!-- Empty state for live -->
-<div class="max-w-7xl mx-auto px-4 mb-8" *ngIf="liveEvents.length === 0 && selectedSport !== 'all'">
-  <div class="glass rounded-2xl p-8 text-center">
-    <i class="fas fa-broadcast-tower text-4xl text-gray-600 mb-3"></i>
-    <p class="text-gray-400">No hay eventos en vivo para esta categoría</p>
-  </div>
-</div>
+      <!-- Decorative elements -->
+      <div class="absolute bottom-0 right-0 w-64 h-64 opacity-20">
+        <i class="fas fa-futbol text-white text-[200px] transform rotate-12"></i>
+      </div>
+    </div>
 
-<!-- Upcoming Events Carousel -->
-<div class="max-w-7xl mx-auto px-4 mb-8" *ngIf="upcomingEvents.length > 0">
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-2xl font-bold flex items-center gap-3">
-      <i class="fas fa-clock text-indigo-400"></i>
-      Próximos Eventos
-      <span class="text-sm font-normal text-gray-400">({{ upcomingEvents.length }})</span>
-    </h2>
-    <a routerLink="/live" class="text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
-      Ver todos <i class="fas fa-chevron-right"></i>
-    </a>
-  </div>
-  <div class="carousel flex gap-4 overflow-x-auto pb-4">
-    <app-event-card *ngFor="let event of upcomingEvents" 
-                    [event]="event" 
-                    size="small"
-                    (cardClick)="openEventDetail($event)">
-    </app-event-card>
-  </div>
-</div>
+    <!-- Live Events Section -->
+    <section *ngIf="liveEvents.length > 0" class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold flex items-center gap-3">
+          <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+          En Vivo Ahora
+          <span class="text-sm font-normal text-gray-400">({{ liveEvents.length }})</span>
+        </h2>
+        <a routerLink="/live" class="text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+          Ver todos <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <app-event-card 
+          *ngFor="let event of liveEvents.slice(0, 3); trackBy: trackByEventId"
+          [event]="event"
+          [isSelected]="isSelected"
+          (selectOdd)="onSelectOdd($event.event, $event.pick, $event.odds)"
+          (viewDetails)="openEventDetails($event)">
+        </app-event-card>
+      </div>
+    </section>
 
-<!-- Popular Events Grid -->
-<div class="max-w-7xl mx-auto px-4 mb-8" *ngIf="popularEvents.length > 0">
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-2xl font-bold flex items-center gap-3">
-      <i class="fas fa-star text-yellow-400"></i>
-      Populares
-    </h2>
-  </div>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    <app-event-card *ngFor="let event of popularEvents" 
-                    [event]="event" 
-                    size="medium"
-                    (cardClick)="openEventDetail($event)">
-    </app-event-card>
-  </div>
-</div>
+    <!-- Featured Events -->
+    <section *ngIf="featuredEvents.length > 0" class="mb-8">
+      <h2 class="text-2xl font-bold mb-4 flex items-center gap-3">
+        <i class="fas fa-star text-yellow-400"></i>
+        Eventos Destacados
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <app-event-card 
+          *ngFor="let event of featuredEvents.slice(0, 6); trackBy: trackByEventId"
+          [event]="event"
+          [featured]="true"
+          [isSelected]="isSelected"
+          (selectOdd)="onSelectOdd($event.event, $event.pick, $event.odds)"
+          (viewDetails)="openEventDetails($event)">
+        </app-event-card>
+      </div>
+    </section>
 
-<!-- Event Detail Modal -->
-<app-event-detail-modal *ngIf="selectedEvent" 
-                        [event]="selectedEvent"
-                        (close)="closeEventDetail()">
-</app-event-detail-modal>
+    <!-- Sport Filter & All Events -->
+    <section class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">Todos los Eventos</h2>
+        <button (click)="refreshEvents()" class="text-gray-400 hover:text-white transition">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+      
+      <!-- Sport Tabs -->
+      <div class="flex gap-2 overflow-x-auto pb-4 scrollbar-hide mb-4">
+        <button 
+          *ngFor="let sport of sports"
+          (click)="filterBySport(sport.id)"
+          [class]="selectedSport === sport.id 
+            ? 'bg-indigo-600 text-white' 
+            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+          class="px-4 py-2 rounded-full flex items-center gap-2 whitespace-nowrap transition">
+          <i [class]="sport.icon"></i>
+          {{ sport.name }}
+        </button>
+      </div>
+
+      <!-- Events Grid -->
+      <div *ngIf="filteredEvents.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <app-event-card 
+          *ngFor="let event of filteredEvents; trackBy: trackByEventId"
+          [event]="event"
+          [isSelected]="isSelected"
+          (selectOdd)="onSelectOdd($event.event, $event.pick, $event.odds)"
+          (viewDetails)="openEventDetails($event)">
+        </app-event-card>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredEvents.length === 0" class="text-center py-12">
+        <i class="fas fa-calendar-xmark text-6xl text-gray-600 mb-4"></i>
+        <h3 class="text-xl font-bold text-gray-400 mb-2">No hay eventos disponibles</h3>
+        <p class="text-gray-500">Prueba con otro deporte o vuelve más tarde</p>
+      </div>
+    </section>
+
+  </ng-container>
+
+  <!-- Event Detail Modal -->
+  <app-event-detail-modal 
+    *ngIf="showDetailModal && selectedEvent"
+    [event]="selectedEvent"
+    [isSelected]="isSelected"
+    (close)="closeDetailModal()"
+    (selectOdd)="onSelectOdd($event.event, $event.pick, $event.odds)">
+  </app-event-detail-modal>
+</div>

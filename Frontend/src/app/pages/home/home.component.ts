@@ -1,74 +1,108 @@
-// Frontend/src/app/components/sport-filter/sport-filter.component.ts
-import { Component, Output, EventEmitter, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-interface SportOption {
-  id: string;
-  name: string;
-  icon: string;
-}
+import { RouterLink } from '@angular/router';
+import { Subject, takeUntil, combineLatest } from 'rxjs';
+import { EventService } from '../../services/event.service';
+import { BetService } from '../../services/bet.service';
+import { SportEvent } from '../../models/event.model';
+import { EventCardComponent } from '../../components/event-card/event-card.component';
+import { EventDetailModalComponent } from '../../components/event-detail-modal/event-detail-modal.component';
 
 @Component({
-  selector: 'app-sport-filter',
+  selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="flex gap-3 overflow-x-auto carousel pb-2">
-      <button *ngFor="let sport of sports"
-              (click)="selectSport(sport.id)"
-              class="flex items-center gap-2 px-5 py-3 rounded-xl whitespace-nowrap transition-all"
-              [class.bg-indigo-600]="selectedSport === sport.id"
-              [class.text-white]="selectedSport === sport.id"
-              [class.bg-gray-800]="selectedSport !== sport.id"
-              [class.text-gray-300]="selectedSport !== sport.id"
-              [class.hover:bg-indigo-500]="selectedSport === sport.id"
-              [class.hover:bg-gray-700]="selectedSport !== sport.id"
-              [class.scale-105]="selectedSport === sport.id">
-        <i [class]="sport.icon"></i>
-        <span>{{ sport.name }}</span>
-        <span *ngIf="getCount(sport.id) > 0" 
-              class="ml-1 px-2 py-0.5 text-xs rounded-full"
-              [class.bg-white/20]="selectedSport === sport.id"
-              [class.bg-gray-700]="selectedSport !== sport.id">
-          {{ getCount(sport.id) }}
-        </span>
-      </button>
-    </div>
-  `,
-  styles: [`
-    .carousel {
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-    .carousel::-webkit-scrollbar {
-      display: none;
-    }
-  `]
+  imports: [CommonModule, RouterLink, EventCardComponent, EventDetailModalComponent],
+  templateUrl: './home.component.html'
 })
-export class SportFilterComponent {
-  @Input() eventCounts: Record<string, number> = {};
-  @Output() sportChange = new EventEmitter<string>();
+export class HomeComponent implements OnInit, OnDestroy {
+  private eventService = inject(EventService);
+  private betService = inject(BetService);
+  private destroy$ = new Subject<void>();
+
+  featuredEvents: SportEvent[] = [];
+  upcomingEvents: SportEvent[] = [];
+  liveEvents: SportEvent[] = [];
+  allEvents: SportEvent[] = [];
   
+  loading = true;
+  error: string | null = null;
   selectedSport = 'all';
   
-  sports: SportOption[] = [
-    { id: 'all', name: 'Todos', icon: 'fas fa-fire' },
+  // Modal
+  selectedEvent: SportEvent | null = null;
+  showDetailModal = false;
+
+  sports = [
+    { id: 'all', name: 'Todos', icon: 'fas fa-trophy' },
     { id: 'football', name: 'Fútbol', icon: 'fas fa-futbol' },
-    { id: 'basketball', name: 'Baloncesto', icon: 'fas fa-basketball' },
+    { id: 'basketball', name: 'Basket', icon: 'fas fa-basketball' },
     { id: 'tennis', name: 'Tenis', icon: 'fas fa-table-tennis-paddle-ball' },
     { id: 'esports', name: 'eSports', icon: 'fas fa-gamepad' },
     { id: 'boxing', name: 'Boxeo', icon: 'fas fa-hand-fist' }
   ];
 
-  selectSport(sportId: string): void {
-    this.selectedSport = sportId;
-    this.sportChange.emit(sportId);
+  ngOnInit(): void {
+    this.eventService.loading$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(loading => this.loading = loading);
+
+    this.eventService.error$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(error => this.error = error);
+
+    combineLatest([
+      this.eventService.getFeaturedEvents(),
+      this.eventService.getLiveEvents(),
+      this.eventService.getUpcomingEvents(),
+      this.eventService.getAllEvents()
+    ]).pipe(takeUntil(this.destroy$))
+    .subscribe(([featured, live, upcoming, all]) => {
+      this.featuredEvents = featured;
+      this.liveEvents = live;
+      this.upcomingEvents = upcoming;
+      this.allEvents = all;
+    });
   }
 
-  getCount(sportId: string): number {
-    if (sportId === 'all') {
-      return Object.values(this.eventCounts).reduce((a, b) => a + b, 0);
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  filterBySport(sportId: string): void {
+    this.selectedSport = sportId;
+  }
+
+  get filteredEvents(): SportEvent[] {
+    if (this.selectedSport === 'all') {
+      return this.allEvents;
     }
-    return this.eventCounts[sportId] || 0;
+    return this.allEvents.filter(e => e.sport === this.selectedSport);
+  }
+
+  onSelectOdd(event: SportEvent, pick: 'home' | 'draw' | 'away', odds: number): void {
+    this.betService.addToSlip(event, pick, odds);
+  }
+
+  isSelected = (eventId: string, pick: string): boolean => {
+    return this.betService.isSelected(eventId, pick);
+  }
+
+  openEventDetails(event: SportEvent): void {
+    this.selectedEvent = event;
+    this.showDetailModal = true;
+  }
+
+  closeDetailModal(): void {
+    this.showDetailModal = false;
+    this.selectedEvent = null;
+  }
+
+  refreshEvents(): void {
+    this.eventService.refreshEvents();
+  }
+
+  trackByEventId(index: number, event: SportEvent): string {
+    return event.id;
   }
 }

@@ -1,4 +1,3 @@
-// Frontend/src/app/services/auth.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, tap, Observable } from 'rxjs';
@@ -16,25 +15,48 @@ export class AuthService {
 
   private loadUserFromStorage(): void {
     const saved = localStorage.getItem('betpro_user');
-    if (saved) {
+    const token = localStorage.getItem('betpro_token');
+    if (saved && token) {
       try {
-        this.userSubject.next(JSON.parse(saved));
+        const user = JSON.parse(saved);
+        this.userSubject.next(user);
+        // Sincronizar con el servidor al cargar
+        this.syncUserFromServer();
       } catch {
         this.logout();
       }
     }
   }
 
+  private syncUserFromServer(): void {
+    const token = this.token;
+    if (!token) return;
+    
+    this.http.get<User>(`${this.API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).subscribe({
+      next: (user) => {
+        if (user) {
+          const updated = { ...user, id: user.id };
+          localStorage.setItem('betpro_user', JSON.stringify(updated));
+          this.userSubject.next(updated);
+        }
+      },
+      error: () => {
+        // Token inválido, hacer logout
+        this.logout();
+      }
+    });
+  }
+
   login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/login`, { email, password }).pipe(
-      tap(res => this.handleAuthSuccess(res))
-    );
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/login`, { email, password })
+      .pipe(tap(res => this.handleAuthSuccess(res)));
   }
 
   register(email: string, username: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/register`, { email, username, password }).pipe(
-      tap(res => this.handleAuthSuccess(res))
-    );
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/register`, { email, username, password })
+      .pipe(tap(res => this.handleAuthSuccess(res)));
   }
 
   private handleAuthSuccess(res: AuthResponse): void {
@@ -52,10 +74,16 @@ export class AuthService {
   updateBalance(newBalance: number): void {
     const user = this.userSubject.value;
     if (user) {
-      const updated = { ...user, saldo: newBalance };
+      const updated: User = { ...user, saldo: newBalance };
       localStorage.setItem('betpro_user', JSON.stringify(updated));
       this.userSubject.next(updated);
+      console.log('💰 Saldo actualizado:', newBalance);
     }
+  }
+
+  // Refrescar datos del usuario desde el servidor
+  refreshUser(): void {
+    this.syncUserFromServer();
   }
 
   get isLoggedIn(): boolean {
