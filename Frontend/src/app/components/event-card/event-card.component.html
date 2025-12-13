@@ -31,8 +31,12 @@
     <div class="flex items-center justify-between mb-4">
       <!-- Team 1 -->
       <div class="flex-1 text-center">
-        <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center text-xl">
-          {{ getFlag1() }}
+        <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden p-1">
+          <img 
+            [src]="event.flag1" 
+            [alt]="event.team1"
+            class="w-full h-full object-contain"
+            (error)="onImageError($event, event.team1)">
         </div>
         <p class="font-medium text-xs text-white truncate px-1">{{ event.team1 }}</p>
       </div>
@@ -54,8 +58,12 @@
 
       <!-- Team 2 -->
       <div class="flex-1 text-center">
-        <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center text-xl">
-          {{ getFlag2() }}
+        <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden p-1">
+          <img 
+            [src]="event.flag2" 
+            [alt]="event.team2"
+            class="w-full h-full object-contain"
+            (error)="onImageError($event, event.team2)">
         </div>
         <p class="font-medium text-xs text-white truncate px-1">{{ event.team2 }}</p>
       </div>

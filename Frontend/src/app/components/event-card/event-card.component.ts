@@ -1,7 +1,6 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SportEvent } from '../../models/event.model';
-import { TeamService } from '../../services/team.service';
 
 @Component({
   selector: 'app-event-card',
@@ -10,27 +9,18 @@ import { TeamService } from '../../services/team.service';
   templateUrl: './event-card.component.html'
 })
 export class EventCardComponent {
-  private teamService = inject(TeamService);
-  
   @Input() event!: SportEvent;
   @Input() featured = false;
   @Input() isLive = false;
   @Input() isSelected!: (eventId: string, pick: string) => boolean;
 
-  @Output() selectOdd = new EventEmitter<{
-    event: SportEvent;
-    pick: 'home' | 'draw' | 'away';
-    odds: number;
-  }>();
-
+  @Output() selectOdd = new EventEmitter<{ event: SportEvent; pick: 'home' | 'draw' | 'away'; odds: number }>();
   @Output() viewDetails = new EventEmitter<SportEvent>();
 
-  getFlag1(): string {
-    return this.teamService.getTeamFlag(this.event.team1) || this.event.flag1 || '🏠';
-  }
-
-  getFlag2(): string {
-    return this.teamService.getTeamFlag(this.event.team2) || this.event.flag2 || '✈️';
+  onImageError(event: Event, teamName: string): void {
+    const img = event.target as HTMLImageElement;
+    // Fallback a placeholder con iniciales
+    img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName)}&background=374151&color=fff&size=80`;
   }
 
   onSelectOdd(pick: 'home' | 'draw' | 'away'): void {
@@ -53,31 +43,23 @@ export class EventCardComponent {
     const period = this.event.period || '';
     
     switch (this.event.sport) {
-      case 'basketball':
-        return period ? `${period} - ${minute}'` : `${minute}'`;
-      case 'tennis':
-        return period || 'En juego';
-      case 'boxing':
-        return period || `R${Math.ceil(minute / 3)}`;
-      default:
-        return `${minute}'`;
+      case 'basketball': return period ? `${period} - ${minute}'` : `${minute}'`;
+      case 'tennis': return period || 'En juego';
+      case 'boxing': return period || `R${Math.ceil(minute / 3)}`;
+      default: return `${minute}'`;
     }
   }
 
   get formattedTime(): string {
-    return new Date(this.event.startTime).toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return new Date(this.event.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   }
 
   get formattedDate(): string {
     const date = new Date(this.event.startTime);
     const today = new Date();
+    if (date.toDateString() === today.toDateString()) return 'Hoy';
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
-    if (date.toDateString() === today.toDateString()) return 'Hoy';
     if (date.toDateString() === tomorrow.toDateString()) return 'Mañana';
     return date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
   }

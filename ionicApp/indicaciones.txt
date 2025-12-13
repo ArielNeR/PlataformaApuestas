@@ -1,0 +1,19 @@
+para ejecutar en la red:
+ionic serve --external
+
+para ejecutar frontend:
+ng serve
+
+para ejecutar backend:
+npm run start:dev
+
+
+compilacion android:
+# Añadir plataforma Android
+ionic capacitor add android
+
+# Sincronizar
+ionic capacitor sync android
+
+# Abrir en Android Studio
+ionic capacitor open android

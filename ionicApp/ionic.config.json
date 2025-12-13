@@ -1,0 +1,7 @@
+{
+  "name": "BetPro",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
