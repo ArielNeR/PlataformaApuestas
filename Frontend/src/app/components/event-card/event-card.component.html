@@ -7,13 +7,13 @@
   <div class="px-4 py-3 border-b border-gray-700/50 flex items-center justify-between">
     <div class="flex items-center gap-2">
       <i [class]="event.sportIcon + ' text-indigo-400'"></i>
-      <span class="text-sm text-gray-400 truncate max-w-[150px]">{{ event.league }}</span>
+      <span class="text-sm text-gray-400 truncate max-w-[120px]">{{ event.league }}</span>
     </div>
     <div class="flex items-center gap-2">
       <ng-container *ngIf="event.status === 'live'; else scheduledTime">
         <span class="flex items-center gap-1 text-red-400 text-sm font-medium">
           <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-          {{ event.minute }}'
+          <span>{{ getTimeDisplay() }}</span>
         </span>
       </ng-container>
       <ng-template #scheduledTime>
@@ -26,47 +26,38 @@
     </div>
   </div>
 
-  <!-- Teams -->
+  <!-- Teams & Score -->
   <div class="p-4">
     <div class="flex items-center justify-between mb-4">
       <!-- Team 1 -->
       <div class="flex-1 text-center">
-        <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center text-2xl overflow-hidden">
-          <img *ngIf="getTeamLogo(event.team1)" 
-               [src]="getTeamLogo(event.team1)" 
-               [alt]="event.team1"
-               class="w-full h-full object-cover"
-               (error)="onImageError($event, event.flag1)">
-          <span *ngIf="!getTeamLogo(event.team1)">{{ event.flag1 }}</span>
+        <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center text-xl">
+          {{ event.flag1 }}
         </div>
-        <p class="font-medium text-sm truncate" [title]="event.team1">{{ event.team1 }}</p>
+        <p class="font-medium text-xs text-white truncate px-1" [title]="event.team1">{{ event.team1 }}</p>
       </div>
 
       <!-- Score / VS -->
-      <div class="px-4">
+      <div class="px-2 flex-shrink-0">
         <ng-container *ngIf="event.status === 'live'; else vsLabel">
-          <div class="bg-gray-800 rounded-lg px-4 py-2">
-            <span class="text-2xl font-bold">
+          <div class="bg-gray-800 rounded-lg px-3 py-2 text-center min-w-[70px]">
+            <div class="text-xl font-bold text-white whitespace-nowrap">
               {{ event.score1 }} - {{ event.score2 }}
-            </span>
+            </div>
+            <p *ngIf="event.period" class="text-[10px] text-gray-400 mt-0.5">{{ event.period }}</p>
           </div>
         </ng-container>
         <ng-template #vsLabel>
-          <span class="text-gray-500 font-bold text-lg">VS</span>
+          <span class="text-gray-500 font-bold">VS</span>
         </ng-template>
       </div>
 
       <!-- Team 2 -->
       <div class="flex-1 text-center">
-        <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center text-2xl overflow-hidden">
-          <img *ngIf="getTeamLogo(event.team2)" 
-               [src]="getTeamLogo(event.team2)" 
-               [alt]="event.team2"
-               class="w-full h-full object-cover"
-               (error)="onImageError($event, event.flag2)">
-          <span *ngIf="!getTeamLogo(event.team2)">{{ event.flag2 }}</span>
+        <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center text-xl">
+          {{ event.flag2 }}
         </div>
-        <p class="font-medium text-sm truncate" [title]="event.team2">{{ event.team2 }}</p>
+        <p class="font-medium text-xs text-white truncate px-1" [title]="event.team2">{{ event.team2 }}</p>
       </div>
     </div>
 
@@ -78,23 +69,23 @@
         [class]="checkSelected('home') 
           ? 'bg-indigo-600 border-indigo-500 ring-2 ring-indigo-400' 
           : 'bg-gray-800/50 border-gray-700 hover:border-indigo-500 hover:bg-gray-800'"
-        class="p-3 rounded-lg border transition-all text-center">
-        <div class="text-xs text-gray-400 mb-1">1</div>
-        <div class="font-bold text-lg" [class.text-indigo-400]="checkSelected('home')">
+        class="p-2.5 rounded-lg border transition-all text-center">
+        <div class="text-[10px] text-gray-400 mb-0.5">1</div>
+        <div class="font-bold text-base" [class]="checkSelected('home') ? 'text-white' : 'text-indigo-400'">
           {{ event.odds.home | number:'1.2-2' }}
         </div>
       </button>
 
-      <!-- Draw (si aplica) -->
+      <!-- Draw -->
       <button 
         *ngIf="event.odds.draw !== undefined"
         (click)="onSelectOdd('draw')"
         [class]="checkSelected('draw') 
           ? 'bg-indigo-600 border-indigo-500 ring-2 ring-indigo-400' 
           : 'bg-gray-800/50 border-gray-700 hover:border-indigo-500 hover:bg-gray-800'"
-        class="p-3 rounded-lg border transition-all text-center">
-        <div class="text-xs text-gray-400 mb-1">X</div>
-        <div class="font-bold text-lg" [class.text-indigo-400]="checkSelected('draw')">
+        class="p-2.5 rounded-lg border transition-all text-center">
+        <div class="text-[10px] text-gray-400 mb-0.5">X</div>
+        <div class="font-bold text-base" [class]="checkSelected('draw') ? 'text-white' : 'text-indigo-400'">
           {{ event.odds.draw | number:'1.2-2' }}
         </div>
       </button>
@@ -105,15 +96,15 @@
         [class]="checkSelected('away') 
           ? 'bg-indigo-600 border-indigo-500 ring-2 ring-indigo-400' 
           : 'bg-gray-800/50 border-gray-700 hover:border-indigo-500 hover:bg-gray-800'"
-        class="p-3 rounded-lg border transition-all text-center">
-        <div class="text-xs text-gray-400 mb-1">2</div>
-        <div class="font-bold text-lg" [class.text-indigo-400]="checkSelected('away')">
+        class="p-2.5 rounded-lg border transition-all text-center">
+        <div class="text-[10px] text-gray-400 mb-0.5">2</div>
+        <div class="font-bold text-base" [class]="checkSelected('away') ? 'text-white' : 'text-indigo-400'">
           {{ event.odds.away | number:'1.2-2' }}
         </div>
       </button>
     </div>
 
-    <!-- Ver Detalles Button -->
+    <!-- Ver Detalles -->
     <button 
       (click)="openDetails()"
       class="w-full py-2 text-center text-sm text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition flex items-center justify-center gap-2">

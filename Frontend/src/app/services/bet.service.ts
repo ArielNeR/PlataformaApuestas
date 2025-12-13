@@ -93,6 +93,11 @@ export class BetService {
     return selection?.pick === pick;
   }
 
+  // ✅ MÉTODO AÑADIDO
+  getStats(): any {
+    return this.statsSubject.value;
+  }
+
   placeBet(stake: number): Observable<any> {
     const selections = this.betSlipSubject.value;
     const totalOdds = this.totalOdds;
@@ -115,20 +120,14 @@ export class BetService {
     return this.http.post(`${this.API_URL}/bets`, body, { headers: this.getHeaders() })
       .pipe(
         tap((response: any) => {
-          console.log('✅ Apuesta realizada:', response);
-          
-          // Limpiar el slip
           this.clearSlip();
           
-          // Actualizar saldo inmediatamente
           if (response.newBalance !== undefined) {
             this.authService.updateBalance(response.newBalance);
           }
           
-          // Recargar estadísticas
           this.loadStats();
 
-          // Simular resultado después de 5 segundos
           if (response.bet && response.bet._id) {
             setTimeout(() => {
               this.simulateBetResult(response.bet._id, stake, potentialWin);
@@ -136,7 +135,7 @@ export class BetService {
           }
         }),
         catchError(err => {
-          console.error('❌ Error al realizar apuesta:', err);
+          console.error('Error al realizar apuesta:', err);
           throw err;
         })
       );
@@ -146,15 +145,12 @@ export class BetService {
     this.http.post<any>(`${this.API_URL}/bets/${betId}/simulate`, {}, { headers: this.getHeaders() })
       .subscribe({
         next: (result) => {
-          console.log('🎲 Resultado simulado:', result);
-          
           if (result.won) {
             this.resultService.showWin(potentialWin - stake);
           } else {
             this.resultService.showLoss(stake);
           }
           
-          // Refrescar datos del usuario para obtener nuevo saldo
           this.authService.refreshUser();
           this.loadStats();
         },
@@ -163,15 +159,9 @@ export class BetService {
   }
 
   getBetHistory(): Observable<any[]> {
-    if (!this.authService.isLoggedIn) {
-      return of([]);
-    }
+    if (!this.authService.isLoggedIn) return of([]);
     return this.http.get<any[]>(`${this.API_URL}/bets`, { headers: this.getHeaders() })
       .pipe(catchError(() => of([])));
-  }
-
-  getStats(): any {
-    return this.statsSubject.value;
   }
 
   refreshStats(): void {

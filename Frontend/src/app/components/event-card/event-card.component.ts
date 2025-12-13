@@ -22,49 +22,10 @@ export class EventCardComponent {
 
   @Output() viewDetails = new EventEmitter<SportEvent>();
 
-  // Mapa de equipos a logos (URLs de ejemplo - puedes usar APIs reales)
-  private teamLogos: Record<string, string> = {
-    'Real Madrid': 'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg',
-    'Barcelona': 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg',
-    'Manchester City': 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg',
-    'Liverpool': 'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg',
-    'Bayern Munich': 'https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg',
-    'PSG': 'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg',
-    'Juventus': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Juventus_FC_2017_logo.svg',
-    'Chelsea': 'https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg',
-    'Arsenal': 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg',
-    'LA Lakers': 'https://upload.wikimedia.org/wikipedia/commons/3/3c/Los_Angeles_Lakers_logo.svg',
-    'Boston Celtics': 'https://upload.wikimedia.org/wikipedia/en/8/8f/Boston_Celtics.svg',
-  };
-
-  // Mapa de países/ligas a banderas emoji
-  private countryFlags: Record<string, string> = {
-    'España': '🇪🇸',
-    'Spain': '🇪🇸',
-    'La Liga': '🇪🇸',
-    'Inglaterra': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-    'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-    'Premier League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-    'Alemania': '🇩🇪',
-    'Germany': '🇩🇪',
-    'Bundesliga': '🇩🇪',
-    'Italia': '🇮🇹',
-    'Italy': '🇮🇹',
-    'Serie A': '🇮🇹',
-    'Francia': '🇫🇷',
-    'France': '🇫🇷',
-    'Ligue 1': '🇫🇷',
-    'USA': '🇺🇸',
-    'NBA': '🇺🇸',
-    'ATP': '🎾',
-    'WTA': '🎾',
-  };
-
   onSelectOdd(pick: 'home' | 'draw' | 'away'): void {
     const odds = pick === 'home' ? this.event.odds.home 
                : pick === 'away' ? this.event.odds.away 
                : this.event.odds.draw!;
-    
     this.selectOdd.emit({ event: this.event, pick, odds });
   }
 
@@ -76,14 +37,23 @@ export class EventCardComponent {
     return this.isSelected ? this.isSelected(this.event.id, pick) : false;
   }
 
-  getTeamLogo(teamName: string): string | null {
-    return this.teamLogos[teamName] || null;
-  }
-
-  onImageError(event: Event, fallbackEmoji: string): void {
-    const img = event.target as HTMLImageElement;
-    img.style.display = 'none';
-    // El emoji de fallback se mostrará automáticamente por el *ngIf
+  getTimeDisplay(): string {
+    const minute = typeof this.event.minute === 'number' ? this.event.minute : 0;
+    const period = this.event.period || '';
+    
+    switch (this.event.sport) {
+      case 'basketball':
+        return period ? `${period} - ${minute}'` : `${minute}'`;
+      case 'tennis':
+        return period || 'En juego';
+      case 'boxing':
+        return period || `R${Math.ceil(minute / 3)}`;
+      case 'esports':
+        return `${minute}'`;
+      case 'football':
+      default:
+        return `${minute}'`;
+    }
   }
 
   get formattedTime(): string {
@@ -99,11 +69,8 @@ export class EventCardComponent {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    if (date.toDateString() === today.toDateString()) {
-      return 'Hoy';
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return 'Mañana';
-    }
+    if (date.toDateString() === today.toDateString()) return 'Hoy';
+    if (date.toDateString() === tomorrow.toDateString()) return 'Mañana';
     return date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
   }
 }

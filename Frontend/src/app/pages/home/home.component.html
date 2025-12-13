@@ -23,51 +23,87 @@
   <!-- Content -->
   <ng-container *ngIf="!loading && !error">
     
-    <!-- Hero Banner CON IMAGEN -->
-    <div class="relative overflow-hidden rounded-2xl mb-8 h-64 md:h-80">
-      <!-- Background Image -->
-      <div class="absolute inset-0">
-        <img src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=80" 
-             alt="Football Stadium" 
-             class="w-full h-full object-cover">
-        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
+    <!-- Hero Banner -->
+    <div class="relative overflow-hidden rounded-2xl mb-8 h-72 md:h-80">
+      <!-- Background con gradiente verde/estadio -->
+      <div class="absolute inset-0 bg-gradient-to-br from-green-800 via-green-600 to-emerald-700"></div>
+      
+      <!-- Patrón de cancha de fútbol -->
+      <div class="absolute inset-0 opacity-20">
+        <svg class="w-full h-full" viewBox="0 0 100 60" preserveAspectRatio="none">
+          <rect x="0" y="0" width="100" height="60" fill="none" stroke="white" stroke-width="0.5"/>
+          <line x1="50" y1="0" x2="50" y2="60" stroke="white" stroke-width="0.5"/>
+          <circle cx="50" cy="30" r="10" fill="none" stroke="white" stroke-width="0.5"/>
+          <rect x="0" y="15" width="10" height="30" fill="none" stroke="white" stroke-width="0.5"/>
+          <rect x="90" y="15" width="10" height="30" fill="none" stroke="white" stroke-width="0.5"/>
+        </svg>
+      </div>
+      
+      <!-- Overlay oscuro -->
+      <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent"></div>
+      
+      <!-- Icono de fútbol -->
+      <div class="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 opacity-30">
+        <i class="fas fa-futbol text-white text-[120px] md:text-[180px]"></i>
       </div>
       
       <!-- Content -->
-      <div class="relative z-10 h-full flex flex-col justify-center p-8">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+      <div class="relative z-10 h-full flex flex-col justify-center p-6 md:p-8">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+            <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+            EN VIVO
+          </span>
+          <span class="text-gray-300 text-sm">{{ liveEvents.length }} eventos activos</span>
+        </div>
+        
+        <h1 class="text-3xl md:text-5xl font-bold mb-3 text-white">
           ¡Bienvenido a <span class="text-yellow-400">BetPro</span>!
         </h1>
-        <p class="text-xl text-white/80 mb-6 max-w-lg">
+        
+        <p class="text-lg md:text-xl text-white/80 mb-6 max-w-lg">
           Las mejores cuotas en deportes y eSports. Apuesta en vivo y gana.
         </p>
-        <div class="flex gap-4">
+        
+        <div class="flex flex-wrap gap-3">
           <a routerLink="/live" 
-             class="bg-red-500 hover:bg-red-600 px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition shadow-lg shadow-red-500/30">
-            <span class="relative flex h-3 w-3">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-            </span>
+             class="bg-red-500 hover:bg-red-600 px-5 py-3 rounded-xl font-bold flex items-center gap-2 transition shadow-lg text-white">
+            <i class="fas fa-broadcast-tower"></i>
             Ver En Vivo
           </a>
-          <a routerLink="/modes" 
-             class="bg-white/20 hover:bg-white/30 px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition backdrop-blur">
-            <i class="fas fa-gamepad"></i>
-            Modos de Juego
-          </a>
+          <button 
+             *ngIf="featuredEvents.length > 0"
+             (click)="openEventDetails(featuredEvents[0])"
+             class="bg-white/20 hover:bg-white/30 px-5 py-3 rounded-xl font-bold flex items-center gap-2 transition backdrop-blur text-white">
+            <i class="fas fa-info-circle"></i>
+            Ver Detalles
+          </button>
         </div>
       </div>
 
-      <!-- Decorative elements -->
-      <div class="absolute bottom-0 right-0 w-64 h-64 opacity-20">
-        <i class="fas fa-futbol text-white text-[200px] transform rotate-12"></i>
+      <!-- Stats Bar -->
+      <div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm py-3 px-4">
+        <div class="flex justify-around text-center">
+          <div>
+            <p class="text-xl md:text-2xl font-bold text-yellow-400">{{ liveEvents.length }}</p>
+            <p class="text-xs text-gray-400">En Vivo</p>
+          </div>
+          <div>
+            <p class="text-xl md:text-2xl font-bold text-green-400">{{ allEvents.length }}</p>
+            <p class="text-xs text-gray-400">Eventos</p>
+          </div>
+          <div>
+            <p class="text-xl md:text-2xl font-bold text-indigo-400">5</p>
+            <p class="text-xs text-gray-400">Deportes</p>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Live Events Section -->
     <section *ngIf="liveEvents.length > 0" class="mb-8">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-2xl font-bold flex items-center gap-3">
+        <h2 class="text-2xl font-bold flex items-center gap-3 text-white">
           <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
           En Vivo Ahora
           <span class="text-sm font-normal text-gray-400">({{ liveEvents.length }})</span>
@@ -89,7 +125,7 @@
 
     <!-- Featured Events -->
     <section *ngIf="featuredEvents.length > 0" class="mb-8">
-      <h2 class="text-2xl font-bold mb-4 flex items-center gap-3">
+      <h2 class="text-2xl font-bold mb-4 flex items-center gap-3 text-white">
         <i class="fas fa-star text-yellow-400"></i>
         Eventos Destacados
       </h2>
@@ -105,17 +141,17 @@
       </div>
     </section>
 
-    <!-- Sport Filter & All Events -->
+    <!-- All Events with Filter -->
     <section class="mb-8">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-2xl font-bold">Todos los Eventos</h2>
+        <h2 class="text-2xl font-bold text-white">Todos los Eventos</h2>
         <button (click)="refreshEvents()" class="text-gray-400 hover:text-white transition">
           <i class="fas fa-sync-alt"></i>
         </button>
       </div>
       
       <!-- Sport Tabs -->
-      <div class="flex gap-2 overflow-x-auto pb-4 scrollbar-hide mb-4">
+      <div class="flex gap-2 overflow-x-auto pb-4 mb-4">
         <button 
           *ngFor="let sport of sports"
           (click)="filterBySport(sport.id)"

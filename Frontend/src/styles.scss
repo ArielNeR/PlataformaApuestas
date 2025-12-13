@@ -139,3 +139,31 @@ body {
 .animate-soft-pulse {
   animation: soft-pulse 2s ease-in-out infinite;
 }
+
+/* Fix para inputs - texto visible */
+input, textarea, select {
+  color: #ffffff !important;
+  background-color: #1f2937 !important;
+  
+  &::placeholder {
+    color: #9ca3af !important;
+  }
+}
+
+/* Fix para autofill de Chrome */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1f2937 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Glass effect mejorado */
+.glass {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

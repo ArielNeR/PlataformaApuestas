@@ -1,5 +1,4 @@
-// backend/src/events/events.controller.ts
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { EventsService } from './events.service';
 
 @Controller('events')

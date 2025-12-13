@@ -1,6 +1,6 @@
-// Frontend/src/app/pages/my-bets/my-bets.component.ts
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
 import { BetService } from '../../services/bet.service';
 
 @Component({
@@ -8,174 +8,159 @@ import { BetService } from '../../services/bet.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="max-w-7xl mx-auto px-4 py-8">
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold flex items-center gap-3">
-          <i class="fas fa-ticket text-indigo-400"></i>
-          Mis Apuestas
-        </h1>
-        <p class="text-gray-400 mt-2">Historial y seguimiento de tus apuestas</p>
-      </div>
+    <div class="max-w-4xl mx-auto px-4 py-6">
+      <h1 class="text-3xl font-bold mb-6 text-white">
+        <i class="fas fa-ticket text-indigo-400 mr-3"></i>
+        Mis Apuestas
+      </h1>
 
       <!-- Stats Summary -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div class="glass rounded-2xl p-5">
-          <div class="text-3xl font-bold">{{ stats.totalBets }}</div>
-          <div class="text-gray-400 text-sm">Total Apuestas</div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="glass rounded-xl p-4 text-center">
+          <p class="text-2xl font-bold text-white">{{ stats.totalBets }}</p>
+          <p class="text-gray-400 text-sm">Total</p>
         </div>
-        <div class="glass rounded-2xl p-5">
-          <div class="text-3xl font-bold text-green-400">{{ stats.won }}</div>
-          <div class="text-gray-400 text-sm">Ganadas</div>
+        <div class="glass rounded-xl p-4 text-center">
+          <p class="text-2xl font-bold text-green-400">{{ stats.won }}</p>
+          <p class="text-gray-400 text-sm">Ganadas</p>
         </div>
-        <div class="glass rounded-2xl p-5">
-          <div class="text-3xl font-bold text-red-400">{{ stats.lost }}</div>
-          <div class="text-gray-400 text-sm">Perdidas</div>
+        <div class="glass rounded-xl p-4 text-center">
+          <p class="text-2xl font-bold text-red-400">{{ stats.lost }}</p>
+          <p class="text-gray-400 text-sm">Perdidas</p>
         </div>
-        <div class="glass rounded-2xl p-5">
-          <div class="text-3xl font-bold" 
-               [class.text-green-400]="stats.profit > 0" 
-               [class.text-red-400]="stats.profit < 0">
-            {{ stats.profit > 0 ? '+' : '' }}\${{ stats.profit.toFixed(2) }}
-          </div>
-          <div class="text-gray-400 text-sm">Balance</div>
+        <div class="glass rounded-xl p-4 text-center">
+          <p class="text-2xl font-bold text-yellow-400">{{ stats.pending }}</p>
+          <p class="text-gray-400 text-sm">Pendientes</p>
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="flex gap-2 mb-6">
-        <button (click)="setTab('all')"
-                class="px-6 py-3 rounded-xl font-bold transition"
-                [class.bg-indigo-600]="activeTab === 'all'"
-                [class.bg-gray-800]="activeTab !== 'all'">
-          Todas
+      <!-- Filter Tabs -->
+      <div class="flex gap-2 mb-6 overflow-x-auto">
+        <button 
+          *ngFor="let filter of filters"
+          (click)="selectedFilter = filter.id"
+          [class]="selectedFilter === filter.id 
+            ? 'bg-indigo-600 text-white' 
+            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+          class="px-4 py-2 rounded-full whitespace-nowrap transition">
+          {{ filter.label }}
         </button>
-        <button (click)="setTab('pending')"
-                class="px-6 py-3 rounded-xl font-bold transition"
-                [class.bg-yellow-600]="activeTab === 'pending'"
-                [class.bg-gray-800]="activeTab !== 'pending'">
-          Pendientes
-        </button>
-        <button (click)="setTab('settled')"
-                class="px-6 py-3 rounded-xl font-bold transition"
-                [class.bg-purple-600]="activeTab === 'settled'"
-                [class.bg-gray-800]="activeTab !== 'settled'">
-          Finalizadas
-        </button>
-      </div>
-
-      <!-- Loading -->
-      <div *ngIf="isLoading" class="flex justify-center py-20">
-        <div class="animate-spin w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
-      </div>
-
-      <!-- Empty State -->
-      <div *ngIf="!isLoading && filteredBets.length === 0" class="text-center py-20 glass rounded-2xl">
-        <i class="fas fa-ticket text-6xl text-gray-600 mb-4"></i>
-        <h3 class="text-2xl font-bold text-gray-400">No hay apuestas</h3>
-        <p class="text-gray-500 mt-2">¡Haz tu primera apuesta ahora!</p>
       </div>
 
       <!-- Bets List -->
-      <div class="space-y-4" *ngIf="!isLoading && filteredBets.length > 0">
-        <div *ngFor="let bet of filteredBets" 
-             class="glass rounded-2xl p-5 hover:border-indigo-500/50 transition">
+      <div *ngIf="filteredBets.length === 0" class="text-center py-12 glass rounded-xl">
+        <i class="fas fa-inbox text-5xl text-gray-600 mb-4"></i>
+        <p class="text-gray-400">No hay apuestas para mostrar</p>
+      </div>
+
+      <div *ngIf="filteredBets.length > 0" class="space-y-4">
+        <div *ngFor="let bet of filteredBets" class="glass rounded-xl p-4">
           
-          <div class="flex items-center justify-between">
-            <div class="flex-1">
-              <h4 class="font-bold text-lg">{{ getBetEventName(bet) }}</h4>
-              <p class="text-gray-400">
-                {{ getBetPick(bet) }} &#64; <span class="text-indigo-400">{{ bet.totalOdds?.toFixed(2) || '0.00' }}</span>
-              </p>
-              <p class="text-xs text-gray-500 mt-1">{{ formatDate(bet.createdAt) }}</p>
-            </div>
-            
-            <div class="text-right">
-              <div class="text-sm text-gray-400 mb-1">Apostado: \${{ bet.stake }}</div>
-              <div class="text-xl font-bold" 
-                   [class.text-green-400]="bet.status === 'won'"
-                   [class.text-red-400]="bet.status === 'lost'"
-                   [class.text-yellow-400]="bet.status === 'pending'">
-                <ng-container *ngIf="bet.status === 'won'">+\${{ (bet.profit || 0).toFixed(2) }}</ng-container>
-                <ng-container *ngIf="bet.status === 'lost'">-\${{ bet.stake.toFixed(2) }}</ng-container>
-                <ng-container *ngIf="bet.status === 'pending'">Pendiente</ng-container>
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                   [class]="bet.status === 'won' ? 'bg-green-500/20' : 
+                           bet.status === 'lost' ? 'bg-red-500/20' : 'bg-yellow-500/20'">
+                <i [class]="bet.status === 'won' ? 'fas fa-check text-green-400' : 
+                           bet.status === 'lost' ? 'fas fa-times text-red-400' : 
+                           'fas fa-clock text-yellow-400'"></i>
+              </div>
+              <div>
+                <span class="text-xs px-2 py-1 rounded-full"
+                      [class]="bet.status === 'won' ? 'bg-green-500/20 text-green-400' : 
+                              bet.status === 'lost' ? 'bg-red-500/20 text-red-400' : 
+                              'bg-yellow-500/20 text-yellow-400'">
+                  {{ bet.status === 'won' ? 'Ganada' : bet.status === 'lost' ? 'Perdida' : 'Pendiente' }}
+                </span>
+                <p class="text-xs text-gray-500 mt-1">{{ bet.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
               </div>
             </div>
+            <div class="text-right">
+              <p class="text-sm text-gray-400">Cuota: {{ bet.totalOdds | number:'1.2-2' }}</p>
+            </div>
+          </div>
 
-            <div class="ml-4">
-              <i *ngIf="bet.status === 'won'" class="fas fa-check-circle text-green-400 text-2xl"></i>
-              <i *ngIf="bet.status === 'lost'" class="fas fa-times-circle text-red-400 text-2xl"></i>
-              <i *ngIf="bet.status === 'pending'" class="fas fa-clock text-yellow-400 text-2xl animate-pulse"></i>
+          <!-- Selections -->
+          <div class="space-y-2 mb-3">
+            <div *ngFor="let sel of bet.selections" class="flex items-center justify-between p-2 bg-gray-800/50 rounded-lg">
+              <div>
+                <p class="text-sm text-white">{{ sel.eventName }}</p>
+                <p class="text-xs text-gray-400">{{ sel.market }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-indigo-400">{{ sel.pickLabel }}</p>
+                <p class="text-xs text-gray-400">Cuota: {{ sel.odds | number:'1.2-2' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="flex items-center justify-between pt-3 border-t border-gray-700">
+            <div>
+              <p class="text-sm text-gray-400">Apostado</p>
+              <p class="font-bold text-white">\${{ bet.stake | number:'1.0-0' }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-gray-400">{{ bet.status === 'pending' ? 'Ganancia potencial' : 'Resultado' }}</p>
+              <p class="font-bold text-lg"
+                 [class]="bet.status === 'won' ? 'text-green-400' : 
+                         bet.status === 'lost' ? 'text-red-400' : 'text-yellow-400'">
+                {{ bet.status === 'won' ? '+' : bet.status === 'lost' ? '-' : '' }}\${{ bet.status === 'lost' ? bet.stake : bet.potentialWin | number:'1.0-0' }}
+              </p>
             </div>
           </div>
         </div>
       </div>
     </div>
-  `,
-  styles: []
+  `
 })
-export class MyBetsComponent implements OnInit {
+export class MyBetsComponent implements OnInit, OnDestroy {
   private betService = inject(BetService);
+  private destroy$ = new Subject<void>();
 
   bets: any[] = [];
-  stats: any = { totalBets: 0, won: 0, lost: 0, pending: 0, profit: 0 };
-  activeTab: 'all' | 'pending' | 'settled' = 'all';
-  isLoading = true;
+  selectedFilter = 'all';
+  
+  stats = {
+    totalBets: 0,
+    won: 0,
+    lost: 0,
+    pending: 0
+  };
+
+  filters = [
+    { id: 'all', label: 'Todas' },
+    { id: 'pending', label: 'Pendientes' },
+    { id: 'won', label: 'Ganadas' },
+    { id: 'lost', label: 'Perdidas' }
+  ];
 
   ngOnInit(): void {
-    this.loadBets();
-    this.stats = this.betService.getStats();
-  }
-
-  private loadBets(): void {
-    this.isLoading = true;
-    this.betService.getBetHistory().subscribe({
-      next: (bets) => {
+    this.betService.getBetHistory()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(bets => {
         this.bets = bets;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error cargando apuestas:', err);
-        this.isLoading = false;
-      }
-    });
+        this.calculateStats();
+      });
   }
 
-  setTab(tab: 'all' | 'pending' | 'settled'): void {
-    this.activeTab = tab;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private calculateStats(): void {
+    this.stats = {
+      totalBets: this.bets.length,
+      won: this.bets.filter(b => b.status === 'won').length,
+      lost: this.bets.filter(b => b.status === 'lost').length,
+      pending: this.bets.filter(b => b.status === 'pending').length
+    };
   }
 
   get filteredBets(): any[] {
-    switch (this.activeTab) {
-      case 'pending':
-        return this.bets.filter(b => b.status === 'pending');
-      case 'settled':
-        return this.bets.filter(b => b.status !== 'pending');
-      default:
-        return this.bets;
-    }
-  }
-
-  getBetEventName(bet: any): string {
-    if (bet.selections && bet.selections.length > 0) {
-      return bet.selections.map((s: any) => s.eventName).join(', ');
-    }
-    return 'Evento desconocido';
-  }
-
-  getBetPick(bet: any): string {
-    if (bet.selections && bet.selections.length > 0) {
-      return bet.selections.map((s: any) => s.pickLabel).join(', ');
-    }
-    return '';
-  }
-
-  formatDate(date: string): string {
-    return new Date(date).toLocaleString('es-AR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (this.selectedFilter === 'all') return this.bets;
+    return this.bets.filter(b => b.status === this.selectedFilter);
   }
 }

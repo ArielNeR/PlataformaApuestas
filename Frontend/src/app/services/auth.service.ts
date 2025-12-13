@@ -20,15 +20,14 @@ export class AuthService {
       try {
         const user = JSON.parse(saved);
         this.userSubject.next(user);
-        // Sincronizar con el servidor al cargar
-        this.syncUserFromServer();
+        this.refreshUser();
       } catch {
         this.logout();
       }
     }
   }
 
-  private syncUserFromServer(): void {
+  refreshUser(): void {
     const token = this.token;
     if (!token) return;
     
@@ -37,15 +36,11 @@ export class AuthService {
     }).subscribe({
       next: (user) => {
         if (user) {
-          const updated = { ...user, id: user.id };
-          localStorage.setItem('betpro_user', JSON.stringify(updated));
-          this.userSubject.next(updated);
+          localStorage.setItem('betpro_user', JSON.stringify(user));
+          this.userSubject.next(user);
         }
       },
-      error: () => {
-        // Token inválido, hacer logout
-        this.logout();
-      }
+      error: () => this.logout()
     });
   }
 
@@ -77,13 +72,7 @@ export class AuthService {
       const updated: User = { ...user, saldo: newBalance };
       localStorage.setItem('betpro_user', JSON.stringify(updated));
       this.userSubject.next(updated);
-      console.log('💰 Saldo actualizado:', newBalance);
     }
-  }
-
-  // Refrescar datos del usuario desde el servidor
-  refreshUser(): void {
-    this.syncUserFromServer();
   }
 
   get isLoggedIn(): boolean {
