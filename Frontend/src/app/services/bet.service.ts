@@ -93,7 +93,6 @@ export class BetService {
     return selection?.pick === pick;
   }
 
-  // ✅ MÉTODO AÑADIDO
   getStats(): any {
     return this.statsSubject.value;
   }
@@ -128,6 +127,7 @@ export class BetService {
           
           this.loadStats();
 
+          // Simular resultado después de 5 segundos
           if (response.bet && response.bet._id) {
             setTimeout(() => {
               this.simulateBetResult(response.bet._id, stake, potentialWin);
@@ -145,8 +145,11 @@ export class BetService {
     this.http.post<any>(`${this.API_URL}/bets/${betId}/simulate`, {}, { headers: this.getHeaders() })
       .subscribe({
         next: (result) => {
+          const netProfit = potentialWin - stake;
+          
+          // SOLO AQUÍ se muestra el overlay
           if (result.won) {
-            this.resultService.showWin(potentialWin - stake);
+            this.resultService.showWin(netProfit);
           } else {
             this.resultService.showLoss(stake);
           }
@@ -154,7 +157,7 @@ export class BetService {
           this.authService.refreshUser();
           this.loadStats();
         },
-        error: (err) => console.error('Error simulando resultado:', err)
+        error: (err) => console.error('Error simulando:', err)
       });
   }
 

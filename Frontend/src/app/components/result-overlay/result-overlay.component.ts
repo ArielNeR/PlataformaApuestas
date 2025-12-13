@@ -1,81 +1,65 @@
-// Frontend/src/app/components/result-overlay/result-overlay.component.ts
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ResultOverlayService } from '../../services/result-overlay.service';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-result-overlay',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div *ngIf="show" 
-         class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none bg-black/50">
-      <div class="text-center animate-slide-up">
-        <div class="text-8xl mb-4">{{ won ? '🎉' : '😢' }}</div>
-        <div class="text-4xl font-bold" [ngClass]="won ? 'text-green-400' : 'text-red-400'">
-          {{ won ? '¡GANASTE!' : 'Perdiste' }}
-        </div>
-        <div class="text-2xl mt-2" [ngClass]="won ? 'text-green-400' : 'text-red-400'">
-          {{ won ? '+' : '-' }}\${{ formattedAmount }}
-        </div>
-      </div>
-    </div>
-    
-    <ng-container *ngIf="show && won">
-      <div class="fixed inset-0 pointer-events-none overflow-hidden z-50">
-        <div *ngFor="let piece of confettiPieces" 
-             class="confetti-piece"
-             [style.left.vw]="piece.x"
-             [style.background-color]="piece.color"
-             [style.animation-delay.s]="piece.delay">
+    <ng-container *ngIf="resultService.state$ | async as state">
+      <div *ngIf="state.show" 
+           class="fixed inset-0 z-[100] flex items-center justify-center p-4"
+           (click)="resultService.hide()">
+        
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+        
+        <!-- Content -->
+        <div class="relative z-10" (click)="$event.stopPropagation()">
+          
+          <!-- Win State -->
+          <div *ngIf="state.won" class="text-center">
+            <div class="w-28 h-28 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-2xl shadow-green-500/50">
+              <i class="fas fa-trophy text-5xl text-white"></i>
+            </div>
+            <h2 class="text-4xl md:text-5xl font-bold text-green-400 mb-4">¡GANASTE!</h2>
+            <div class="bg-green-500/20 border border-green-500/50 rounded-2xl px-8 py-4 mb-6">
+              <p class="text-sm text-green-300 mb-1">Ganancia neta</p>
+              <p class="text-4xl font-bold text-green-400">+$<span>{{ formatAmount(state.amount) }}</span></p>
+            </div>
+            <div class="flex justify-center gap-2 text-3xl">
+              🎉🎊🏆🎊🎉
+            </div>
+          </div>
+
+          <!-- Loss State -->
+          <div *ngIf="!state.won" class="text-center">
+            <div class="w-28 h-28 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center shadow-2xl shadow-red-500/50">
+              <i class="fas fa-times text-5xl text-white"></i>
+            </div>
+            <h2 class="text-4xl md:text-5xl font-bold text-red-400 mb-4">PERDISTE</h2>
+            <div class="bg-red-500/20 border border-red-500/50 rounded-2xl px-8 py-4 mb-6">
+              <p class="text-sm text-red-300 mb-1">Pérdida</p>
+              <p class="text-4xl font-bold text-red-400">-$<span>{{ formatAmount(state.amount) }}</span></p>
+            </div>
+            <p class="text-gray-400">¡Mejor suerte la próxima!</p>
+          </div>
+
+          <!-- Close -->
+          <p class="text-center text-gray-500 text-sm mt-6">Toca para cerrar</p>
         </div>
       </div>
     </ng-container>
-  `,
-  styles: [`
-    :host { display: contents; }
-  `]
+  `
 })
-export class ResultOverlayComponent implements OnInit, OnDestroy {
-  private service = inject(ResultOverlayService);
-  private sub?: Subscription;
+export class ResultOverlayComponent {
+  resultService = inject(ResultOverlayService);
 
-  show = false;
-  won = false;
-  amount = 0;
-  
-  confettiPieces: { x: number; color: string; delay: number }[] = [];
-  private colors = ['#22c55e', '#f59e0b', '#ec4899', '#818cf8', '#14b8a6'];
-
-  get formattedAmount(): string {
-    return this.amount.toFixed(2);
-  }
-
-  ngOnInit(): void {
-    this.sub = this.service.state$.subscribe(state => {
-      this.show = state.show;
-      this.won = state.won;
-      this.amount = state.amount;
-      
-      if (state.show && state.won) {
-        this.createConfetti();
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.sub?.unsubscribe();
-  }
-
-  private createConfetti(): void {
-    this.confettiPieces = [];
-    for (let i = 0; i < 50; i++) {
-      this.confettiPieces.push({
-        x: Math.random() * 100,
-        color: this.colors[Math.floor(Math.random() * this.colors.length)],
-        delay: Math.random() * 0.5
-      });
+  formatAmount(amount: number | undefined | null): string {
+    if (amount === undefined || amount === null || isNaN(amount)) {
+      return '0';
     }
+    return Math.abs(amount).toFixed(0);
   }
 }

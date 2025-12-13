@@ -1,4 +1,3 @@
-// backend/src/bets/bets.controller.ts
 import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { BetsService } from './bets.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -9,12 +8,7 @@ export class BetsController {
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
-  async create(@Request() req, @Body() body: {
-    selections: any[];
-    stake: number;
-    totalOdds: number;
-    potentialWin: number;
-  }) {
+  async create(@Request() req, @Body() body: any) {
     return this.betsService.create(req.user.userId, body);
   }
 

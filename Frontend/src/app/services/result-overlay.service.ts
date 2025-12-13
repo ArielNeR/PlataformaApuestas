@@ -1,4 +1,3 @@
-// Frontend/src/app/services/result-overlay.service.ts
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
@@ -10,20 +9,39 @@ export interface ResultState {
 
 @Injectable({ providedIn: 'root' })
 export class ResultOverlayService {
-  private stateSubject = new BehaviorSubject<ResultState>({ show: false, won: false, amount: 0 });
+  private stateSubject = new BehaviorSubject<ResultState>({
+    show: false,
+    won: false,
+    amount: 0
+  });
+  
   state$ = this.stateSubject.asObservable();
 
   showWin(amount: number): void {
-    this.stateSubject.next({ show: true, won: true, amount });
-    setTimeout(() => this.hide(), 3500);
+    console.log('🎉 Overlay: Mostrando GANASTE', amount);
+    this.stateSubject.next({
+      show: true,
+      won: true,
+      amount: amount || 0
+    });
+    setTimeout(() => this.hide(), 5000);
   }
 
   showLoss(amount: number): void {
-    this.stateSubject.next({ show: true, won: false, amount });
-    setTimeout(() => this.hide(), 3500);
+    console.log('😢 Overlay: Mostrando PERDISTE', amount);
+    this.stateSubject.next({
+      show: true,
+      won: false,
+      amount: amount || 0
+    });
+    setTimeout(() => this.hide(), 5000);
   }
 
-  private hide(): void {
-    this.stateSubject.next({ show: false, won: false, amount: 0 });
+  hide(): void {
+    this.stateSubject.next({
+      show: false,
+      won: false,
+      amount: 0
+    });
   }
 }

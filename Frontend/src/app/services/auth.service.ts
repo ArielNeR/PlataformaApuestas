@@ -20,6 +20,7 @@ export class AuthService {
       try {
         const user = JSON.parse(saved);
         this.userSubject.next(user);
+        // Sincronizar con servidor al cargar
         this.refreshUser();
       } catch {
         this.logout();
@@ -36,11 +37,14 @@ export class AuthService {
     }).subscribe({
       next: (user) => {
         if (user) {
+          console.log('🔄 Usuario actualizado desde servidor:', user);
           localStorage.setItem('betpro_user', JSON.stringify(user));
           this.userSubject.next(user);
         }
       },
-      error: () => this.logout()
+      error: (err) => {
+        console.error('Error al refrescar usuario:', err);
+      }
     });
   }
 
@@ -69,7 +73,9 @@ export class AuthService {
   updateBalance(newBalance: number): void {
     const user = this.userSubject.value;
     if (user) {
-      const updated: User = { ...user, saldo: newBalance };
+      const roundedBalance = Math.round(newBalance * 100) / 100;
+      const updated: User = { ...user, saldo: roundedBalance };
+      console.log('💰 Actualizando saldo local:', roundedBalance);
       localStorage.setItem('betpro_user', JSON.stringify(updated));
       this.userSubject.next(updated);
     }

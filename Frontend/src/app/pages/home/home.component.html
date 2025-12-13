@@ -4,12 +4,12 @@
   <div *ngIf="error" class="bg-red-500/20 border border-red-500 rounded-xl p-6 mb-6">
     <div class="flex items-center gap-3">
       <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
-      <div>
+      <div class="flex-1">
         <h3 class="font-bold text-red-400">Error de conexión</h3>
         <p class="text-gray-400 text-sm">{{ error }}</p>
       </div>
-      <button (click)="refreshEvents()" class="ml-auto bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
-        <i class="fas fa-refresh mr-2"></i>Reintentar
+      <button (click)="refreshEvents()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition text-white">
+        Reintentar
       </button>
     </div>
   </div>
@@ -23,33 +23,32 @@
   <!-- Content -->
   <ng-container *ngIf="!loading && !error">
     
-    <!-- Hero Banner -->
-    <div class="relative overflow-hidden rounded-2xl mb-8 h-72 md:h-80">
-      <!-- Background con gradiente verde/estadio -->
+    <!-- Hero Banner CORREGIDO -->
+    <div class="relative overflow-hidden rounded-2xl mb-8">
+      <!-- Background -->
       <div class="absolute inset-0 bg-gradient-to-br from-green-800 via-green-600 to-emerald-700"></div>
       
-      <!-- Patrón de cancha de fútbol -->
+      <!-- Patrón cancha -->
       <div class="absolute inset-0 opacity-20">
         <svg class="w-full h-full" viewBox="0 0 100 60" preserveAspectRatio="none">
           <rect x="0" y="0" width="100" height="60" fill="none" stroke="white" stroke-width="0.5"/>
           <line x1="50" y1="0" x2="50" y2="60" stroke="white" stroke-width="0.5"/>
           <circle cx="50" cy="30" r="10" fill="none" stroke="white" stroke-width="0.5"/>
-          <rect x="0" y="15" width="10" height="30" fill="none" stroke="white" stroke-width="0.5"/>
-          <rect x="90" y="15" width="10" height="30" fill="none" stroke="white" stroke-width="0.5"/>
         </svg>
       </div>
       
-      <!-- Overlay oscuro -->
+      <!-- Overlay -->
       <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent"></div>
       
-      <!-- Icono de fútbol -->
-      <div class="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 opacity-30">
-        <i class="fas fa-futbol text-white text-[120px] md:text-[180px]"></i>
+      <!-- Icono decorativo -->
+      <div class="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
+        <i class="fas fa-futbol text-white text-[100px] md:text-[150px]"></i>
       </div>
       
       <!-- Content -->
-      <div class="relative z-10 h-full flex flex-col justify-center p-6 md:p-8">
-        <div class="flex items-center gap-2 mb-3">
+      <div class="relative z-10 p-6 md:p-8">
+        <!-- Badge -->
+        <div class="flex items-center gap-2 mb-4">
           <span class="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
             <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
             EN VIVO
@@ -57,15 +56,18 @@
           <span class="text-gray-300 text-sm">{{ liveEvents.length }} eventos activos</span>
         </div>
         
+        <!-- Title -->
         <h1 class="text-3xl md:text-5xl font-bold mb-3 text-white">
           ¡Bienvenido a <span class="text-yellow-400">BetPro</span>!
         </h1>
         
+        <!-- Subtitle -->
         <p class="text-lg md:text-xl text-white/80 mb-6 max-w-lg">
           Las mejores cuotas en deportes y eSports. Apuesta en vivo y gana.
         </p>
         
-        <div class="flex flex-wrap gap-3">
+        <!-- Buttons -->
+        <div class="flex flex-wrap gap-3 mb-8">
           <a routerLink="/live" 
              class="bg-red-500 hover:bg-red-600 px-5 py-3 rounded-xl font-bold flex items-center gap-2 transition shadow-lg text-white">
             <i class="fas fa-broadcast-tower"></i>
@@ -79,21 +81,19 @@
             Ver Detalles
           </button>
         </div>
-      </div>
 
-      <!-- Stats Bar -->
-      <div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm py-3 px-4">
-        <div class="flex justify-around text-center">
-          <div>
-            <p class="text-xl md:text-2xl font-bold text-yellow-400">{{ liveEvents.length }}</p>
+        <!-- Stats Bar - SEPARADO de los botones -->
+        <div class="grid grid-cols-3 gap-4 bg-black/40 rounded-xl p-4 backdrop-blur-sm max-w-md">
+          <div class="text-center">
+            <p class="text-2xl md:text-3xl font-bold text-yellow-400">{{ liveEvents.length }}</p>
             <p class="text-xs text-gray-400">En Vivo</p>
           </div>
-          <div>
-            <p class="text-xl md:text-2xl font-bold text-green-400">{{ allEvents.length }}</p>
+          <div class="text-center border-l border-r border-gray-600">
+            <p class="text-2xl md:text-3xl font-bold text-green-400">{{ allEvents.length }}</p>
             <p class="text-xs text-gray-400">Eventos</p>
           </div>
-          <div>
-            <p class="text-xl md:text-2xl font-bold text-indigo-400">5</p>
+          <div class="text-center">
+            <p class="text-2xl md:text-3xl font-bold text-indigo-400">5</p>
             <p class="text-xs text-gray-400">Deportes</p>
           </div>
         </div>
@@ -179,13 +179,13 @@
       <div *ngIf="filteredEvents.length === 0" class="text-center py-12">
         <i class="fas fa-calendar-xmark text-6xl text-gray-600 mb-4"></i>
         <h3 class="text-xl font-bold text-gray-400 mb-2">No hay eventos disponibles</h3>
-        <p class="text-gray-500">Prueba con otro deporte o vuelve más tarde</p>
+        <p class="text-gray-500">Prueba con otro deporte</p>
       </div>
     </section>
 
   </ng-container>
 
-  <!-- Event Detail Modal -->
+  <!-- Modal -->
   <app-event-detail-modal 
     *ngIf="showDetailModal && selectedEvent"
     [event]="selectedEvent"

@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SportEvent } from '../../models/event.model';
+import { TeamService } from '../../services/team.service';
 
 @Component({
   selector: 'app-event-card',
@@ -9,6 +10,8 @@ import { SportEvent } from '../../models/event.model';
   templateUrl: './event-card.component.html'
 })
 export class EventCardComponent {
+  private teamService = inject(TeamService);
+  
   @Input() event!: SportEvent;
   @Input() featured = false;
   @Input() isLive = false;
@@ -21,6 +24,14 @@ export class EventCardComponent {
   }>();
 
   @Output() viewDetails = new EventEmitter<SportEvent>();
+
+  getFlag1(): string {
+    return this.teamService.getTeamFlag(this.event.team1) || this.event.flag1 || '🏠';
+  }
+
+  getFlag2(): string {
+    return this.teamService.getTeamFlag(this.event.team2) || this.event.flag2 || '✈️';
+  }
 
   onSelectOdd(pick: 'home' | 'draw' | 'away'): void {
     const odds = pick === 'home' ? this.event.odds.home 
@@ -48,9 +59,6 @@ export class EventCardComponent {
         return period || 'En juego';
       case 'boxing':
         return period || `R${Math.ceil(minute / 3)}`;
-      case 'esports':
-        return `${minute}'`;
-      case 'football':
       default:
         return `${minute}'`;
     }
