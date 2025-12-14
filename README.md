@@ -1,12 +1,13 @@
-```markdown
-# 🎲 BetPro – Plataforma de Apuestas Deportivas (Full-Stack)
+🎲 BetPro – Plataforma de Apuestas Deportivas (Full-Stack)
+========================================================
 
 **Stack moderno:** NestJS + Angular + Ionic + MongoDB + WebSockets  
 **Demo rápida:** Crea una cuenta con “@demo.com” y recibe **$ 100.000 demo** automáticamente.
 
 ---
 
-## 📦 ¿Qué incluye el repo?
+📦 ¿Qué incluye el repo?
+------------------------
 
 | Carpeta     | Tecnología | Descripción |
 |-------------|------------|-------------|
@@ -16,14 +17,17 @@
 
 ---
 
-## 🚀 Levantar el proyecto en 3 pasos
+🚀 Levantar el proyecto en 3 pasos
+---------------------------------
 
-### 1. Backend
+**1. Backend**
+
 ```bash
 cd backend
 cp .env.example .env            # edita MONGODB_URI y JWT_SECRET si quieres
 npm install
-npm run start:dev                # http://localhost:3000
+npm run start:dev               # http://localhost:3000
+
 ```
 
 ### 2. Frontend web
