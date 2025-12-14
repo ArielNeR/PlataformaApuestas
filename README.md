@@ -17,6 +17,19 @@
 
 ---
 
+⬇️ Descargar APK (Android)
+==========================
+
+Puedes descargar la versión Android directamente desde este repositorio:
+
+👉 **[Descargar BetPro.apk](./BetPro.apk)**
+
+**Requisitos:**
+- Android 8.0 o superior
+- Permitir *“Instalar apps de orígenes desconocidos”*
+
+> El APK es una build de prueba. No incluye firma de Play Store.
+
 🚀 Levantar el proyecto en 3 pasos
 ---------------------------------
 
