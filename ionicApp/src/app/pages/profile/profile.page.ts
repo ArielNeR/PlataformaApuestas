@@ -1,16 +1,16 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, IonList, IonItem, IonLabel, AlertController, ToastController } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, AlertController, ToastController } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { logOut, person, wallet, statsChart, ticket, settings, add, chevronForward } from 'ionicons/icons';
+import { logOut, person, wallet, statsChart, ticket, settings, add, chevronForward, wifi } from 'ionicons/icons';
 import { Subject, takeUntil } from 'rxjs';
 import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, IonList, IonItem, IonLabel],
+  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip],
   template: `
     <ion-header class="ion-no-border">
       <ion-toolbar>
@@ -68,35 +68,43 @@ import { ApiService } from '../../services/api.service';
           <!-- Menu Items -->
           <div class="menu-section">
             <button class="menu-item" (click)="showComingSoon()">
-              <div class="menu-icon bg-indigo-500/20">
-                <ion-icon name="ticket" class="text-indigo-400"></ion-icon>
+              <div class="menu-icon menu-icon-indigo">
+                <ion-icon name="ticket"></ion-icon>
               </div>
               <span class="menu-label">Mis Apuestas</span>
               <ion-icon name="chevron-forward" class="menu-arrow"></ion-icon>
             </button>
 
             <button class="menu-item" (click)="showComingSoon()">
-              <div class="menu-icon bg-green-500/20">
-                <ion-icon name="stats-chart" class="text-green-400"></ion-icon>
+              <div class="menu-icon menu-icon-green">
+                <ion-icon name="stats-chart"></ion-icon>
               </div>
               <span class="menu-label">Estadísticas</span>
               <ion-icon name="chevron-forward" class="menu-arrow"></ion-icon>
             </button>
 
             <button class="menu-item" (click)="showComingSoon()">
-              <div class="menu-icon bg-gray-500/20">
-                <ion-icon name="settings" class="text-gray-400"></ion-icon>
+              <div class="menu-icon menu-icon-gray">
+                <ion-icon name="settings"></ion-icon>
               </div>
               <span class="menu-label">Configuración</span>
               <ion-icon name="chevron-forward" class="menu-arrow"></ion-icon>
             </button>
 
-            <button class="menu-item logout" (click)="logout()">
-              <div class="menu-icon bg-red-500/20">
-                <ion-icon name="log-out" class="text-red-400"></ion-icon>
+            <button class="menu-item" routerLink="/connection">
+              <div class="menu-icon menu-icon-blue">
+                <ion-icon name="wifi"></ion-icon>
               </div>
-              <span class="menu-label text-red-400">Cerrar Sesión</span>
-              <ion-icon name="chevron-forward" class="menu-arrow text-red-400"></ion-icon>
+              <span class="menu-label">Conexión al Servidor</span>
+              <ion-icon name="chevron-forward" class="menu-arrow"></ion-icon>
+            </button>
+
+            <button class="menu-item" (click)="logout()">
+              <div class="menu-icon menu-icon-red">
+                <ion-icon name="log-out"></ion-icon>
+              </div>
+              <span class="menu-label menu-label-red">Cerrar Sesión</span>
+              <ion-icon name="chevron-forward" class="menu-arrow menu-arrow-red"></ion-icon>
             </button>
           </div>
 
@@ -107,6 +115,18 @@ import { ApiService } from '../../services/api.service';
           </div>
 
         </div>
+
+        <!-- Connection Button for non-logged users too -->
+        <div *ngIf="!user" class="mt-6">
+          <button class="menu-item" routerLink="/connection">
+            <div class="menu-icon menu-icon-blue">
+              <ion-icon name="wifi"></ion-icon>
+            </div>
+            <span class="menu-label">Conexión al Servidor</span>
+            <ion-icon name="chevron-forward" class="menu-arrow"></ion-icon>
+          </button>
+        </div>
+
       </div>
     </ion-content>
   `,
@@ -244,6 +264,41 @@ import { ApiService } from '../../services/api.service';
       font-size: 20px;
     }
     
+    .menu-icon-indigo {
+      background: rgba(99, 102, 241, 0.2);
+    }
+    .menu-icon-indigo ion-icon {
+      color: #818cf8;
+    }
+    
+    .menu-icon-green {
+      background: rgba(34, 197, 94, 0.2);
+    }
+    .menu-icon-green ion-icon {
+      color: #4ade80;
+    }
+    
+    .menu-icon-gray {
+      background: rgba(107, 114, 128, 0.2);
+    }
+    .menu-icon-gray ion-icon {
+      color: #9ca3af;
+    }
+    
+    .menu-icon-blue {
+      background: rgba(59, 130, 246, 0.2);
+    }
+    .menu-icon-blue ion-icon {
+      color: #60a5fa;
+    }
+    
+    .menu-icon-red {
+      background: rgba(239, 68, 68, 0.2);
+    }
+    .menu-icon-red ion-icon {
+      color: #f87171;
+    }
+    
     .menu-label {
       flex: 1;
       font-size: 15px;
@@ -252,9 +307,17 @@ import { ApiService } from '../../services/api.service';
       text-align: left;
     }
     
+    .menu-label-red {
+      color: #f87171;
+    }
+    
     .menu-arrow {
       color: #6b7280;
       font-size: 18px;
+    }
+    
+    .menu-arrow-red {
+      color: #f87171;
     }
     
     .app-info {
@@ -265,6 +328,10 @@ import { ApiService } from '../../services/api.service';
       font-size: 12px;
       color: #6b7280;
       margin: 4px 0;
+    }
+
+    .mt-6 {
+      margin-top: 1.5rem;
     }
   `]
 })
@@ -277,13 +344,18 @@ export class ProfilePage implements OnInit, OnDestroy {
 
   user: any = null;
 
-  constructor() { addIcons({ logOut, person, wallet, statsChart, ticket, settings, add, chevronForward }); }
+  constructor() { 
+    addIcons({ logOut, person, wallet, statsChart, ticket, settings, add, chevronForward, wifi }); 
+  }
 
   ngOnInit() {
     this.api.user$.pipe(takeUntil(this.destroy$)).subscribe(u => this.user = u);
   }
 
-  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
+  ngOnDestroy() { 
+    this.destroy$.next(); 
+    this.destroy$.complete(); 
+  }
 
   async deposit() {
     const alert = await this.alertCtrl.create({
@@ -300,7 +372,7 @@ export class ProfilePage implements OnInit, OnDestroy {
             if (amount > 0) {
               this.api.updateBalance(this.user.saldo + amount);
               const toast = await this.toastCtrl.create({
-                message: `¡Depósito de \$${amount} realizado!`,
+                message: `¡Depósito de $${amount} realizado!`,
                 duration: 2000,
                 color: 'success',
                 position: 'top'

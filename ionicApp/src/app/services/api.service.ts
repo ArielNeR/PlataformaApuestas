@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
+import { BehaviorSubject, of } from 'rxjs';
+import { catchError, timeout } from 'rxjs/operators';
 import { Preferences } from '@capacitor/preferences';
+import { ConnectionService } from './connection.service';
 
 export interface User {
   id: string;
@@ -42,7 +42,6 @@ export interface BetSelection {
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private apiUrl = environment.apiUrl;
 
   private userSubject = new BehaviorSubject<User | null>(null);
   user$ = this.userSubject.asObservable();
@@ -54,14 +53,33 @@ export class ApiService {
   betSlip$ = this.betSlipSubject.asObservable();
 
   private tokenCache: string | null = null;
+  private initialized = false;
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private connectionService: ConnectionService
+  ) {
     this.init();
   }
 
+  private get apiUrl(): string {
+    return this.connectionService.getApiUrl();
+  }
+
   private async init() {
+    // Esperar a que la configuración de conexión esté lista
+    await this.connectionService.ensureLoaded();
     await this.loadUserFromStorage();
     this.loadEvents();
+    this.initialized = true;
+    
+    // Suscribirse a cambios de configuración para recargar eventos
+    this.connectionService.config$.subscribe(() => {
+      if (this.initialized) {
+        console.log('🔄 Config cambió, recargando eventos...');
+        this.loadEvents();
+      }
+    });
   }
 
   // ========== AUTH ==========
@@ -82,22 +100,30 @@ export class ApiService {
 
   async login(email: string, password: string): Promise<boolean> {
     try {
-      const res: any = await this.http.post(`${this.apiUrl}/auth/login`, { email, password }).toPromise();
+      console.log(`🔐 Intentando login en: ${this.apiUrl}/auth/login`);
+      const res: any = await this.http.post(`${this.apiUrl}/auth/login`, { email, password })
+        .pipe(timeout(10000))
+        .toPromise();
       await this.saveAuthData(res.access_token, res.user);
+      console.log('✅ Login exitoso');
       return true;
-    } catch (e) {
-      console.error('Login error:', e);
+    } catch (e: any) {
+      console.error('❌ Login error:', e.message || e);
       return false;
     }
   }
 
   async register(email: string, username: string, password: string): Promise<boolean> {
     try {
-      const res: any = await this.http.post(`${this.apiUrl}/auth/register`, { email, username, password }).toPromise();
+      console.log(`📝 Intentando registro en: ${this.apiUrl}/auth/register`);
+      const res: any = await this.http.post(`${this.apiUrl}/auth/register`, { email, username, password })
+        .pipe(timeout(10000))
+        .toPromise();
       await this.saveAuthData(res.access_token, res.user);
+      console.log('✅ Registro exitoso');
       return true;
-    } catch (e) {
-      console.error('Register error:', e);
+    } catch (e: any) {
+      console.error('❌ Register error:', e.message || e);
       return false;
     }
   }
@@ -122,7 +148,13 @@ export class ApiService {
     if (!token) return;
 
     this.http.get<User>(`${this.apiUrl}/auth/me`, { headers: this.getHeaders(token) })
-      .pipe(catchError(() => of(null)))
+      .pipe(
+        timeout(10000),
+        catchError((err) => {
+          console.error('Error refreshing user:', err);
+          return of(null);
+        })
+      )
       .subscribe(user => {
         if (user) {
           Preferences.set({ key: 'user', value: JSON.stringify(user) });
@@ -142,11 +174,25 @@ export class ApiService {
 
   // ========== EVENTS ==========
   loadEvents() {
-    this.http.get<any[]>(`${this.apiUrl}/events`)
-      .pipe(catchError(() => of([])))
+    const url = `${this.apiUrl}/events`;
+    console.log(`📡 Cargando eventos desde: ${url}`);
+    
+    this.http.get<any[]>(url)
+      .pipe(
+        timeout(10000),
+        catchError((err) => {
+          console.error('❌ Error cargando eventos:', err.message || err);
+          return of([]);
+        })
+      )
       .subscribe(events => {
-        const mapped = events.map(e => this.mapEvent(e));
-        this.eventsSubject.next(mapped);
+        if (events.length > 0) {
+          console.log(`✅ ${events.length} eventos cargados`);
+          const mapped = events.map(e => this.mapEvent(e));
+          this.eventsSubject.next(mapped);
+        } else {
+          console.log('⚠️ No se recibieron eventos');
+        }
       });
   }
 
@@ -241,14 +287,16 @@ export class ApiService {
     };
 
     try {
-      const res: any = await this.http.post(`${this.apiUrl}/bets`, body, { headers: this.getHeaders(token) }).toPromise();
+      const res: any = await this.http.post(`${this.apiUrl}/bets`, body, { headers: this.getHeaders(token) })
+        .pipe(timeout(10000))
+        .toPromise();
       this.clearSlip();
       if (res.newBalance !== undefined) {
         this.updateBalance(res.newBalance);
       }
 
       // Simular resultado
-      setTimeout(() => this.simulateBet(res.bet._id, stake, body.potentialWin), 5000);
+      setTimeout(() => this.simulateBet(res.bet._id), 5000);
 
       return { success: true };
     } catch (err: any) {
@@ -256,11 +304,12 @@ export class ApiService {
     }
   }
 
-  private async simulateBet(betId: string, stake: number, potentialWin: number) {
+  private async simulateBet(betId: string) {
     const token = await this.getToken();
     if (!token) return;
 
     this.http.post<any>(`${this.apiUrl}/bets/${betId}/simulate`, {}, { headers: this.getHeaders(token) })
+      .pipe(timeout(10000))
       .subscribe({
         next: () => this.refreshUser(),
         error: (e) => console.error('Simulate error:', e)

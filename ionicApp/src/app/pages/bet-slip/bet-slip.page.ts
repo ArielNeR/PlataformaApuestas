@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonInput, IonItem, IonLabel, IonList, IonChip, IonNote, AlertController, ToastController } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, AlertController, ToastController } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { trash, close, checkmark, warning, arrowForward, receipt } from 'ionicons/icons';
 import { Subject, takeUntil } from 'rxjs';
@@ -11,7 +11,7 @@ import { ApiService, BetSelection } from '../../services/api.service';
 @Component({
   selector: 'app-bet-slip',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonInput, IonItem, IonLabel, IonList, IonChip, IonNote],
+  imports: [CommonModule, FormsModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip],
   template: `
     <ion-header class="ion-no-border">
       <ion-toolbar>
