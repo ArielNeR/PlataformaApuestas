@@ -37,17 +37,69 @@ import { SportEvent } from '../../models/event.model';
         <!-- Score (si está en vivo) -->
         <div *ngIf="event.status === 'live'" class="p-6 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border-b border-gray-700">
           <div class="flex items-center justify-center gap-8">
+            <!-- Team 1 con imagen -->
             <div class="text-center">
-              <div class="text-3xl mb-1">{{ event.flag1 }}</div>
-              <p class="font-medium">{{ event.team1 }}</p>
+              <div class="w-16 h-16 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden p-2">
+                <img 
+                  [src]="event.flag1" 
+                  [alt]="event.team1"
+                  class="w-full h-full object-contain"
+                  (error)="onImageError($event, event.team1)">
+              </div>
+              <p class="font-medium text-sm">{{ event.team1 }}</p>
             </div>
+            
+            <!-- Score -->
             <div class="text-center">
               <div class="text-5xl font-bold">{{ event.score1 }} - {{ event.score2 }}</div>
               <p class="text-sm text-gray-400 mt-1">{{ event.period || 'En juego' }}</p>
             </div>
+            
+            <!-- Team 2 con imagen -->
             <div class="text-center">
-              <div class="text-3xl mb-1">{{ event.flag2 }}</div>
-              <p class="font-medium">{{ event.team2 }}</p>
+              <div class="w-16 h-16 mx-auto mb-2 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden p-2">
+                <img 
+                  [src]="event.flag2" 
+                  [alt]="event.team2"
+                  class="w-full h-full object-contain"
+                  (error)="onImageError($event, event.team2)">
+              </div>
+              <p class="font-medium text-sm">{{ event.team2 }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teams Preview (si NO está en vivo) -->
+        <div *ngIf="event.status !== 'live'" class="p-6 border-b border-gray-700">
+          <div class="flex items-center justify-center gap-8">
+            <!-- Team 1 -->
+            <div class="text-center flex-1">
+              <div class="w-20 h-20 mx-auto mb-3 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden p-2">
+                <img 
+                  [src]="event.flag1" 
+                  [alt]="event.team1"
+                  class="w-full h-full object-contain"
+                  (error)="onImageError($event, event.team1)">
+              </div>
+              <p class="font-semibold">{{ event.team1 }}</p>
+            </div>
+            
+            <!-- VS -->
+            <div class="text-center px-4">
+              <div class="text-2xl font-bold text-gray-500">VS</div>
+              <p class="text-xs text-gray-500 mt-1">{{ event.startTime | date:'HH:mm' }}</p>
+            </div>
+            
+            <!-- Team 2 -->
+            <div class="text-center flex-1">
+              <div class="w-20 h-20 mx-auto mb-3 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden p-2">
+                <img 
+                  [src]="event.flag2" 
+                  [alt]="event.team2"
+                  class="w-full h-full object-contain"
+                  (error)="onImageError($event, event.team2)">
+              </div>
+              <p class="font-semibold">{{ event.team2 }}</p>
             </div>
           </div>
         </div>
@@ -177,6 +229,12 @@ export class EventDetailModalComponent {
 
   constructor() {
     this.stats.possession2 = 100 - this.stats.possession1;
+  }
+
+  // ✅ Método para manejar errores de imagen (fallback a iniciales)
+  onImageError(event: Event, teamName: string): void {
+    const img = event.target as HTMLImageElement;
+    img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName)}&background=374151&color=fff&size=80`;
   }
 
   isSelectedPick(pick: string): boolean {
