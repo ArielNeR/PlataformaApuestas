@@ -9,3 +9,12 @@ Temp/
 Logs/
 *.mp4
 *.zip
+
+# Auto ignore
+build/
+.gradle/
+*.apk
+*.aab
+Library/
+Temp/
+Logs/
