@@ -1,0 +1,11 @@
+
+# Auto ignore
+build/
+.gradle/
+*.apk
+*.aab
+Library/
+Temp/
+Logs/
+*.mp4
+*.zip
